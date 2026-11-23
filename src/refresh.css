@@ -545,8 +545,96 @@
   font-size: 16px;
 }
 .rsx-seg:has(select:focus-visible) { outline: 2px solid var(--accent-strong); outline-offset: 2px; }
+.rsx-seg:has(> select) .rsx-k::after {
+  content: "";
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  margin-inline-start: 9px;
+  border-inline-end: 1.5px solid var(--accent);
+  border-block-end: 1.5px solid var(--accent);
+  vertical-align: 3px;
+  transform: rotate(45deg);
+}
+.rsx-seg:has(> select:open) .rsx-k::after { transform: rotate(225deg); vertical-align: 0; }
 .rsx-seg input:focus-visible { outline: 0 !important; }
-.rsx-what:has(input:focus-visible) { outline: 2px solid var(--accent-strong); outline-offset: 2px; }
+
+
+/* Records and language pickers share the active theme's accent tokens. */
+.pg-settings [aria-labelledby="lang"] .li > select {
+  box-sizing: border-box;
+  inline-size: 12.5rem;
+  max-inline-size: 100%;
+  min-inline-size: 0;
+  min-block-size: 44px;
+  padding-inline: 12px;
+  border: 1px solid var(--line-strong);
+  cursor: pointer;
+}
+.pg-settings [aria-labelledby="lang"] .li > select:is(:hover, :open) {
+  box-shadow: 0 0 0 1px var(--accent-line);
+}
+
+@media (max-width: 500px) {
+  .pg-settings [aria-labelledby="lang"] .li { display: grid; gap: 8px; padding-block: 11px; }
+  .pg-settings [aria-labelledby="lang"] .li > select { inline-size: 100%; }
+}
+
+@supports (appearance: base-select) and selector(::picker(select)) {
+  :is(.rsx-seg > select, .pg-settings [aria-labelledby="lang"] select),
+  :is(.rsx-seg > select, .pg-settings [aria-labelledby="lang"] select)::picker(select) {
+    appearance: base-select;
+  }
+  :is(.rsx-seg > select, .pg-settings [aria-labelledby="lang"] select)::picker(select) {
+    box-sizing: border-box;
+    min-inline-size: min(max(anchor-size(width), 13rem), calc(100vw - 24px));
+    max-inline-size: calc(100vw - 24px);
+    margin-block: 6px;
+    padding: 5px;
+    border: 1px solid var(--accent-line);
+    border-radius: var(--r-md);
+    background: var(--surface);
+    color: var(--ink);
+    box-shadow: var(--shadow-3);
+    opacity: 1;
+    font: 500 14px/1.4 var(--type);
+  }
+  :is(.rsx-seg > select, .pg-settings [aria-labelledby="lang"] select) option {
+    box-sizing: border-box;
+    min-block-size: 40px;
+    padding: 9px 11px;
+    gap: 12px;
+    border-radius: var(--r-sm);
+    cursor: pointer;
+  }
+  :is(.rsx-seg > select, .pg-settings [aria-labelledby="lang"] select) option:checked {
+    background: var(--accent-surface);
+    color: var(--accent);
+    font-weight: 650;
+  }
+  :is(.rsx-seg > select, .pg-settings [aria-labelledby="lang"] select) option:is(:hover, :focus-visible) {
+    background: color-mix(in srgb, var(--accent-surface) 90%, var(--accent));
+    color: var(--accent);
+  }
+  :is(.rsx-seg > select, .pg-settings [aria-labelledby="lang"] select) option:focus-visible {
+    outline: 2px solid var(--accent-strong);
+    outline-offset: -2px;
+  }
+  :is(.rsx-seg > select, .pg-settings [aria-labelledby="lang"] select) option::checkmark {
+    order: 1;
+    margin-inline-start: auto;
+    color: var(--accent);
+  }
+  .pg-settings [aria-labelledby="lang"] select::picker-icon { color: var(--accent); }
+  .pg-settings [aria-labelledby="lang"] select:open::picker-icon { rotate: 180deg; }
+  @media (prefers-reduced-motion: no-preference) {
+    :is(.rsx-seg > select, .pg-settings [aria-labelledby="lang"] select)::picker(select) {
+      animation: themed-picker-in 140ms var(--ease);
+    }
+    .pg-settings [aria-labelledby="lang"] select::picker-icon { transition: rotate 140ms var(--ease); }
+  }
+}
+@keyframes themed-picker-in { from { transform: translateY(-4px); } }
 
 .rsx-go {
   position: absolute;
@@ -901,3 +989,40 @@
 /* Floor-plan lifts keep their neutral map colour (beats the generic SVG mapping) */
 :root:root:root:root .pg-overview .mapc svg :is(g, rect)[fill="#2F5DA8"] { fill: var(--map-lift); }
 :root:root:root .pg-assistant .asu .asl { color: var(--on-accent) !important; opacity: .85; }
+
+/* Assistant composer */
+:root:root:root .pg-assistant .assug button {
+  background: var(--surface-muted) !important;
+  color: var(--ink) !important;
+  border: 1px solid var(--line) !important;
+  font-weight: 500;
+}
+:root:root:root .pg-assistant .assug button:hover {
+  background: color-mix(in srgb, var(--accent-strong) 12%, var(--surface)) !important;
+  border-color: var(--accent-strong) !important;
+}
+:root:root:root .pg-assistant .asin {
+  padding: 6px 7px 6px 16px;
+  border: 1px solid var(--line);
+  border-radius: 18px;
+  background: var(--surface);
+}
+:root:root:root .pg-assistant .asin:focus-within {
+  border-color: var(--accent-strong);
+  box-shadow: 0 0 0 1px var(--accent-strong);
+}
+:root:root:root .pg-assistant .asin #askq {
+  outline: none !important;
+  border: 0 !important;
+  box-shadow: none !important;
+  background: transparent !important;
+}
+:root:root:root .pg-assistant .asin .assend {
+  flex: 0 0 36px;
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  background: var(--accent-solid) !important;
+  color: var(--on-accent) !important;
+  border-radius: 12px !important;
+}
