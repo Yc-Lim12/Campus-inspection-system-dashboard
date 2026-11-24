@@ -1,11 +1,233 @@
 import React from 'react';
-import { SidebarProfile } from '../Sidebar.jsx';
-import { ThemeCtx, SearchCtx } from '../ctx.js';
+import { useDashboardLocale } from '../dashboardLocale.js';
+import DashboardPage, { WorkflowDialog } from '../DashboardPage.jsx';
+import { DemoCtx } from '../ctx.js';
+import { campusTime, robotLabels } from '../dashboardState.js';
+
+const days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+const limitFields = [
+  ['temperatureMin', 'Minimum temperature (°C)', -20, 80],
+  ['temperatureMax', 'Maximum temperature (°C)', -20, 80],
+  ['humidityMin', 'Minimum humidity (%)', 0, 100],
+  ['humidityMax', 'Maximum humidity (%)', 0, 100],
+  ['pm25', 'Maximum PM2.5 (µg/m³)', 0, 1000],
+  ['gas', 'Gas above baseline (%)', 0, 1000],
+];
+
+function changeMessage(message, t) {
+  if (!message) return '';
+  if (typeof message !== 'string') {
+    const values = Object.fromEntries(Object.entries(message.values).map(([key, value]) => [key, t(value)]));
+    return t(message.key, values);
+  }
+  const patterns = [
+    [/^Updated patrol (.+)$/, 'Updated patrol {item}', 'item'],
+    [/^Added patrol (.+)$/, 'Added patrol {item}', 'item'],
+    [/^Updated zone (.+)$/, 'Updated zone {item}', 'item'],
+    [/^Added zone (.+)$/, 'Added zone {item}', 'item'],
+    [/^Added (.+) to the local roster$/, 'Added {email} to the local roster', 'email'],
+    [/^Set photo request retention to (\d+) hours$/, 'Set photo request retention to {hours} hours', 'hours'],
+    [/^Updated (.+)$/, 'Updated {item}', 'item'],
+    [/^Added (.+)$/, 'Added {item}', 'item'],
+  ];
+  for (const [pattern, key, field] of patterns) {
+    const match = message.match(pattern);
+    if (match) return t(key, { [field]: t(match[1]) });
+  }
+  return t(message);
+}
+
+function Editor({ type, item, configuration, save, onClose }) {
+  const { t } = useDashboardLocale();
+  const [error, setError] = React.useState('');
+  const titles = {
+    checkpoint: item ? 'Edit checkpoint' : 'Add checkpoint',
+    patrol: item ? 'Edit patrol' : 'Add patrol',
+    person: 'Invite to local roster',
+    zone: item ? 'Edit restricted zone' : 'Add restricted zone',
+    retention: 'Change photo request retention',
+  };
+
+  function submit(event) {
+    event.preventDefault();
+    const data = new FormData(event.currentTarget);
+    const get = key => String(data.get(key) || '').trim();
+    let update;
+    let message;
+    if (type === 'checkpoint') {
+      const room = get('room').toUpperCase();
+      if (!room || !get('location')) return setError('Enter a room and location.');
+      if (configuration.checkpoints.some(entry => entry.room === room && entry.id !== item?.id)) return setError('That room already has a checkpoint.');
+      const id = item?.id || 'CP' + (Math.max(0, ...configuration.checkpoints.map(entry => Number(entry.id.slice(2)))) + 1);
+      const entry = { id, room, location: get('location'), active: data.has('active'), photo: data.has('photo') };
+      update = { checkpoints: item ? configuration.checkpoints.map(checkpoint => checkpoint.id === id ? entry : checkpoint) : [...configuration.checkpoints, entry] };
+      message = { key: item ? 'Updated {item}' : 'Added {item}', values: { item: id + ' · ' + room } };
+    }
+    if (type === 'patrol') {
+      const selectedDays = data.getAll('days');
+      if (!get('name') || !selectedDays.length) return setError('Enter a name and choose at least one day.');
+      const duplicate = configuration.patrols.some(patrol => patrol.id !== item?.id && patrol.active && data.has('active') &&
+        patrol.time === get('time') && patrol.days.some(day => selectedDays.includes(day)));
+      if (duplicate) return setError('An active patrol already starts at that time on one of these days.');
+      const entry = { id: item?.id || Date.now(), name: get('name'), time: get('time'), days: selectedDays, active: data.has('active') };
+      update = { patrols: item ? configuration.patrols.map(patrol => patrol.id === entry.id ? entry : patrol) : [...configuration.patrols, entry] };
+      message = { key: item ? 'Updated patrol {item}' : 'Added patrol {item}', values: { item: entry.name } };
+    }
+    if (type === 'person') {
+      const email = get('email').toLowerCase();
+      if (configuration.people.some(person => person.email === email)) return setError('That email is already on the local roster.');
+      update = { people: [...configuration.people, { email, role: get('role') }] };
+      message = { key: 'Added {email} to the local roster', values: { email } };
+    }
+    if (type === 'zone') {
+      if (!get('name')) return setError('Enter a name for the zone.');
+      const entry = { id: item?.id || Date.now(), name: get('name'), rule: get('rule'), checkpoint: get('checkpoint') };
+      update = { zones: item ? configuration.zones.map(zone => zone.id === entry.id ? entry : zone) : [...configuration.zones, entry] };
+      message = { key: item ? 'Updated zone {item}' : 'Added zone {item}', values: { item: entry.name } };
+    }
+    if (type === 'retention') {
+      update = { retentionHours: Number(get('hours')) };
+      message = { key: 'Set photo request retention to {hours} hours', values: { hours: update.retentionHours } };
+    }
+    save(update, message);
+    onClose();
+  }
+
+  return (
+    <WorkflowDialog title={t(titles[type])} onClose={onClose}>
+      <form className="workflow-form" onSubmit={submit} onChange={() => setError('')}>
+        {type === 'checkpoint' && <>
+          <label>{t("Room")}<input name="room" required maxLength={40} defaultValue={item?.room} /></label>
+          <label>{t("Location description")}<input name="location" required maxLength={100} defaultValue={item?.location} /></label>
+          <label className="workflow-check"><input name="active" type="checkbox" defaultChecked={item?.active ?? true} />{" " + t("Active checkpoint")}</label>
+          <label className="workflow-check"><input name="photo" type="checkbox" defaultChecked={item?.photo ?? true} />{" " + t("Allow photo requests")}</label>
+        </>}
+        {type === 'patrol' && <>
+          <label>{t("Name")}<input name="name" required maxLength={60} defaultValue={item?.name} /></label>
+          <label>{t("Start time")}<input name="time" type="time" required defaultValue={item?.time} /></label>
+          <fieldset className="workflow-actions"><legend>{t("Days")}</legend>{days.map(day => (
+            <label key={day} className="workflow-check"><input type="checkbox" name="days" value={day} defaultChecked={item?.days.includes(day) ?? false} /> {t(day)}</label>
+          ))}</fieldset>
+          <label className="workflow-check"><input name="active" type="checkbox" defaultChecked={item?.active ?? true} />{" " + t("Active patrol")}</label>
+        </>}
+        {type === 'person' && <>
+          <p>{t("Local roster entries can be assigned to alerts. Invitations are recorded here.")}</p>
+          <label>{t("Email")}<input name="email" type="email" required maxLength={120} /></label>
+          <label>{t("Role")}<select name="role"><option value="Facility staff">{t("Facility staff")}</option><option value="Administrator">{t("Administrator")}</option></select></label>
+        </>}
+        {type === 'zone' && <>
+          <label>{t("Zone name")}<input name="name" required maxLength={70} defaultValue={item?.name} /></label>
+          <label>{t("Checkpoint")}<select name="checkpoint" defaultValue={item?.checkpoint || ''}>
+            <option value="">{t("Area listed by name")}</option>
+            {configuration.checkpoints.map(point => <option value={point.id} key={point.id}>{point.id} · {point.room}</option>)}
+          </select></label>
+          <label>{t("Rule")}<select name="rule" defaultValue={item?.rule || 'No photography'}><option value="No photography">{t("No photography")}</option><option value="No entry">{t("No entry")}</option></select></label>
+        </>}
+        {type === 'retention' && <label>{t("Retention in hours")}<input name="hours" type="number" required min="1" max="168" defaultValue={configuration.retentionHours} /></label>}
+        {error && <p role="alert">{t(error)}</p>}
+        <div className="workflow-actions">
+          <button className="btn primary" type="submit">{t("Save")}</button>
+          <button className="btn" type="button" onClick={onClose}>{t("Cancel")}</button>
+        </div>
+      </form>
+    </WorkflowDialog>
+  );
+}
 
 export default function Admin() {
-  const { openSearch } = React.useContext(SearchCtx);
-  
-  return (<div className="pg pg-admin">
-<div style={{"minHeight": "100vh", "margin": "0 auto", "display": "flex", "flexWrap": "wrap"}}>{" "}<a href="#main" className="skip">{"Skip to main content"}</a>{" "}<aside className="side" aria-label="Sidebar">{" "}<div className="brand"><span className="appicon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><rect x="5" y="8" width="14" height="10" rx="3"></rect><path d="M12 8V5"></path><circle cx="12" cy="4" r="1"></circle><circle cx="9.5" cy="13" r="1" fill="#8CC4F0" stroke="#8CC4F0"></circle><circle cx="14.5" cy="13" r="1" fill="#8CC4F0" stroke="#8CC4F0"></circle></svg></span><div><strong>{"Campus Inspection"}</strong><span>{"Sunway Univ · Level 8"}</span></div></div>{" "}<label className="sq"><span className="sr">{"Search everything"}</span><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true"><circle cx="11" cy="11" r="7"></circle><path d="m20 20-3.5-3.5"></path></svg><input id="gq" type="search" placeholder="Search…" onFocus={openSearch} readOnly /><kbd>{"⌘K"}</kbd></label>{" "}<a href="#camera" className="robot"><span className="dot" aria-hidden="true"></span><span><strong>{"Patrolling"}</strong><span>{"CP3 next · Battery 78%"}</span></span></a>{" "}<nav aria-label="Main" className="sn">{" "}<a href="#overview" className="si"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M3 11.5 12 4l9 7.5V20a1 1 0 0 1-1 1h-5v-6h-6v6H4a1 1 0 0 1-1-1z"></path></svg><span>{"Overview"}</span></a>{" "}<a href="#camera" className="si"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><rect x="3" y="6" width="13" height="12" rx="2"></rect><path d="m16 10 5-3v10l-5-3"></path></svg><span>{"Camera"}</span></a>{" "}<a href="#alerts" className="si"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M12 3 2 20h20L12 3Z"></path><path d="M12 10v4"></path><path d="M12 17h.01"></path></svg><span>{"Alerts"}</span><span className="badge" aria-label="2 open">{"2"}</span></a>{" "}<a href="#records" className="si"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><rect x="4" y="3" width="16" height="18" rx="2"></rect><path d="M8 8h8M8 12h8M8 16h5"></path></svg><span>{"Records"}</span></a>{" "}<a href="#reports" className="si"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"></path></svg><span>{"Reports"}</span></a>{" "}<a href="#assistant" className="si"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M4 5h16v11H9l-5 4z"></path><path d="M8 10h8"></path></svg><span>{"Assistant"}</span></a>{" "}<p className="sec">{"Manage"}</p>{" "}<a href="#admin" className="si on" aria-current="page"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><circle cx="12" cy="8" r="3.5"></circle><path d="M5 20c1-4 4-6 7-6s6 2 7 6"></path></svg><span>{"Admin"}</span></a>{" "}<a href="#settings" className="si"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"></circle><path d="M12 2v3M12 19v3M2 12h3M19 12h3M4.9 4.9l2.1 2.1M17 17l2.1 2.1M4.9 19.1 7 17M17 7l2.1-2.1"></path></svg><span>{"Settings"}</span></a>{" "}<a href="#guidebook" className="si"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"></circle><path d="M9.5 9.5a2.5 2.5 0 1 1 3.5 2.3c-.6.3-1 .8-1 1.5v.7"></path><path d="M12 17h.01"></path></svg><span>{"Guidebook"}</span></a>{" "}</nav>{" "}<SidebarProfile />{" "}</aside>{" "}<div className="content">{" "}<main id="main" tabIndex={-1} className="adm">{" "}<div className="adh">{" "}<div><h1>{"Admin"}</h1><p className="demo-feature-note">Sample configuration. This demo cannot change robot or account settings.</p><p>{"Set up the robot, its checkpoints and who can use the dashboard."}</p></div>{" "}<div className="adsave"><span className="muted">{"Sample settings"}</span><button disabled type="button" className="adb">{"View change log"}</button></div>{" "}</div>{" "}<div className="adg">{" "}<section className="adc span2" aria-labelledby="cp-h">{" "}<div className="adt"><div><h2 id="cp-h">{"Checkpoints"}</h2><p>{"4 on Sunway Univ Level 8 · picked on the saved map"}</p></div><button disabled type="button" className="adb pri">{"+ Add checkpoint"}</button></div>{" "}<div className="cpw">{" "}<svg className="cpmap" viewBox="0 0 900 520" role="img" aria-label="Small map of Level 8 with checkpoints 1 to 4 and the no-camera staffroom"><rect width="900" height="520" rx="18" fill="#F7F5F2"></rect><path d="M40 30 H205 V250 H720 V40 H860 V490 H720 V300 H205 V490 H40 Z" fill="#E6DED4" stroke="#B8AE9F" strokeWidth="2"></path><g fill="#D9BC93"><rect x="40" y="30" width="85" height="80"></rect><rect x="40" y="120" width="85" height="130"></rect><rect x="250" y="170" width="470" height="80"></rect><rect x="250" y="300" width="470" height="80"></rect><rect x="40" y="410" width="165" height="80"></rect></g><rect x="720" y="40" width="140" height="210" fill="#C9B8A3" opacity=".6"></rect><path d="M150 395 V160 M150 275 H778 V420" fill="none" stroke="#4A7FD4" strokeWidth="5" strokeDasharray="2 12" strokeLinecap="round"></path><g fontSize="22" fontWeight="700" textAnchor="middle" fill="#FFFFFF"><circle cx="150" cy="160" r="22" fill="#1E4F8C"></circle><text x="150" y="168">{"1"}</text><circle cx="407" cy="275" r="22" fill="#1E4F8C"></circle><text x="407" y="283">{"2"}</text><circle cx="642" cy="275" r="22" fill="#1E4F8C"></circle><text x="642" y="283">{"3"}</text><circle cx="778" cy="420" r="22" fill="#1E4F8C"></circle><text x="778" y="428">{"4"}</text></g><text x="790" y="150" fontSize="18" fill="#6B5A47" textAnchor="middle">{"no camera"}</text></svg>{" "}<table className="adtab"><caption className="sr">{"Checkpoints"}</caption><thead><tr><th scope="col">{"#"}</th><th scope="col">{"Location"}</th><th scope="col">{"Checks"}</th><th scope="col">{"Last visit"}</th><th scope="col">{"Active"}</th><th scope="col"><span className="sr">{"Actions"}</span></th></tr></thead><tbody><tr><td><span className="num">{"1"}</span></td><td><b>{"UW-8-5"}</b><span>{"West wing corridor"}</span></td><td><span className="ck">{"Photo"}</span><span className="ck">{"Air"}</span></td><td>{"10:12 today"}</td><td><span className="sw on" role="switch" aria-checked="true" aria-label="CP1 active"><i></i></span></td><td><button disabled type="button" className="lnk">{"Edit"}</button></td></tr><tr><td><span className="num">{"2"}</span></td><td><b>{"UC-8-8"}</b><span>{"Central corridor"}</span></td><td><span className="ck">{"Photo"}</span><span className="ck">{"Air"}</span></td><td>{"10:31 today"}</td><td><span className="sw on" role="switch" aria-checked="true" aria-label="CP2 active"><i></i></span></td><td><button disabled type="button" className="lnk">{"Edit"}</button></td></tr><tr><td><span className="num">{"3"}</span></td><td><b>{"UC-8-10"}</b><span>{"Central corridor, east"}</span></td><td><span className="ck">{"Photo"}</span><span className="ck">{"Air"}</span></td><td>{"yesterday 15:52"}</td><td><span className="sw on" role="switch" aria-checked="true" aria-label="CP3 active"><i></i></span></td><td><button disabled type="button" className="lnk">{"Edit"}</button></td></tr><tr><td><span className="num">{"4"}</span></td><td><b>{"UC-8-11"}</b><span>{"East wing, by the lift"}</span></td><td><span className="ck">{"Photo"}</span><span className="ck">{"Air"}</span></td><td>{"yesterday 16:18"}</td><td><span className="sw on" role="switch" aria-checked="true" aria-label="CP4 active"><i></i></span></td><td><button disabled type="button" className="lnk">{"Edit"}</button></td></tr></tbody></table>{" "}</div>{" "}</section>{" "}<section className="adc" aria-labelledby="rb-h">{" "}<div className="adt"><div><h2 id="rb-h">{"Robot 01"}</h2><p>{"Last health check 09:55"}</p></div><span className="okp">{"Healthy"}</span></div>{" "}<ul className="hl"><li><span>{"LiDAR"}</span><b className="g">{"OK · 6.9 Hz"}</b></li><li><span>{"Camera"}</span><b className="g">{"OK"}</b></li><li><span>{"Air sensors"}</span><b className="g">{"3 of 3 reporting"}</b></li><li><span>{"Battery health"}</span><b>{"94%"}</b></li><li><span>{"Last map update"}</span><b>{"12 Nov"}</b></li><li><span>{"Software"}</span><b>{"v0.4.2"}</b></li></ul>{" "}<button disabled type="button" className="adb" style={{"width": "100%"}}>{"Run health check"}</button>{" "}</section>{" "}<section className="adc span2" aria-labelledby="th-h">{" "}<div className="adt"><div><h2 id="th-h">{"Alert limits"}</h2><p>{"When a reading goes past these, the dashboard raises an incident."}</p></div><button disabled type="button" className="adb pri">{"Save limits"}</button></div>{" "}<div className="ths">{" "}<div className="th"><div className="thr"><b>{"Temperature"}</b><span>{"23 – 26 °C"}</span></div><div className="rng" aria-hidden="true"><i style={{"left": "41.7%", "width": "25%"}}></i><s style={{"left": "53%"}}></s></div><div className="thn"><span>{"18"}</span><span>{"now 24.4"}</span><span>{"30"}</span></div><em>{"DOSH ICOP IAQ 2010"}</em></div>{" "}<div className="th"><div className="thr"><b>{"Humidity"}</b><span>{"40 – 70 %"}</span></div><div className="rng" aria-hidden="true"><i style={{"left": "25%", "width": "37.5%"}}></i><s style={{"left": "53.8%"}}></s></div><div className="thn"><span>{"20"}</span><span>{"now 63"}</span><span>{"100"}</span></div><em>{"DOSH ICOP IAQ 2010"}</em></div>{" "}<div className="th warn"><div className="thr"><b>{"PM2.5"}</b><span>{"up to 35 µg/m³"}</span></div><div className="rng" aria-hidden="true"><i style={{"left": "0", "width": "58%"}}></i><s style={{"left": "68%"}}></s></div><div className="thn"><span>{"0"}</span><span>{"now 41 at CP2"}</span><span>{"60"}</span></div><em>{"Malaysia AAQS 2020, 24-hour"}</em></div>{" "}<div className="th"><div className="thr"><b>{"Gas (MQ135)"}</b><span>{"30% above baseline"}</span></div><div className="rng" aria-hidden="true"><i style={{"left": "0", "width": "60%"}}></i><s style={{"left": "8%"}}></s></div><div className="thn"><span>{"baseline"}</span><span>{"now +4%"}</span><span>{"+50%"}</span></div><em>{"Relative reading, not ppm"}</em></div>{" "}</div>{" "}<div className="sev"><b>{"Response time by severity"}</b><span><i className="d hi"></i>{"High 4 h"}</span><span><i className="d md"></i>{"Medium 24 h"}</span><span><i className="d lo"></i>{"Low 72 h"}</span></div>{" "}</section>{" "}<section className="adc" aria-labelledby="us-h">{" "}<div className="adt"><div><h2 id="us-h">{"People"}</h2><p>{"3 people can sign in"}</p></div><button disabled type="button" className="adb">{"Invite"}</button></div>{" "}<ul className="ppl"><li><span className="av" style={{"background": "var(--cDCE6F5)", "color": "var(--c1E4F8C)"}}>{"AD"}</span><span className="pn"><b>{"[ Admin name ]"}</b><span>{"Administrator · you"}</span></span><span className="rl adm2">{"Admin"}</span></li><li><span className="av" style={{"background": "var(--cE6F3EC)", "color": "var(--c2F7D56)"}}>{"FS"}</span><span className="pn"><b>{"[ Staff name ]"}</b><span>{"Facility staff · active now"}</span></span><span className="rl">{"Staff"}</span></li><li><span className="av" style={{"background": "var(--cFBEEDC)", "color": "var(--cB25200)"}}>{"FS"}</span><span className="pn"><b>{"[ Staff name ]"}</b><span>{"Facility staff · 2 days ago"}</span></span><span className="rl">{"Staff"}</span></li></ul>{" "}<p className="muted" style={{"margin": "0", "fontSize": "12px"}}>{"The demo has no connection to Sunway accounts."}</p>{" "}</section>{" "}<section className="adc span2" aria-labelledby="sc-h">{" "}<div className="adt"><div><h2 id="sc-h">{"Patrol schedule"}</h2><p>{"Patrols avoid class changes (every hour, :50 to :00)"}</p></div><button disabled type="button" className="adb pri">{"+ Add patrol"}</button></div>{" "}<div className="wk2" role="table" aria-label="Weekly patrol schedule">{" "}<div className="wh" role="row"><span role="columnheader"></span><span role="columnheader">{"Mon"}</span><span role="columnheader">{"Tue"}</span><span role="columnheader">{"Wed"}</span><span role="columnheader">{"Thu"}</span><span role="columnheader">{"Fri"}</span><span role="columnheader">{"Sat"}</span><span role="columnheader">{"Sun"}</span></div>{" "}<div className="wr" role="row"><span role="rowheader"><b>{"09:55"}</b>{"morning"}</span><i className="on"></i><i className="on"></i><i className="on"></i><i className="on"></i><i className="on now"></i><i></i><i></i></div>{" "}<div className="wr" role="row"><span role="rowheader"><b>{"14:00"}</b>{"afternoon"}</span><i className="on"></i><i className="on"></i><i className="on"></i><i className="on"></i><i className="on"></i><i></i><i></i></div>{" "}<div className="wr" role="row"><span role="rowheader"><b>{"18:30"}</b>{"after classes"}</span><i className="off"></i><i className="off"></i><i className="off"></i><i className="off"></i><i></i><i></i><i></i></div>{" "}</div>{" "}<div className="wleg"><span><i className="on"></i>{"On"}</span><span><i className="off"></i>{"Paused"}</span><span><i className="on now"></i>{"Running now"}</span><span>{"Each patrol: CP1 → CP4, about 75 min"}</span></div>{" "}</section>{" "}<section className="adc" aria-labelledby="pv-h">{" "}<div className="adt"><div><h2 id="pv-h">{"Privacy"}</h2><p>{"Sample privacy settings"}</p></div></div>{" "}<ul className="pv"><li><span className="pvi">{"⦸"}</span><span><b>{"Academic Staffroom L8"}</b><span>{"Camera off, robot may pass"}</span></span><button disabled type="button" className="lnk">{"Edit"}</button></li><li><span className="pvi">{"⦸"}</span><span><b>{"Toilets, both wings"}</b><span>{"Robot does not enter"}</span></span><button disabled type="button" className="lnk">{"Edit"}</button></li><li><span className="pvi">{"⏱"}</span><span><b>{"Requested photos"}</b><span>{"Deleted after 24 h"}</span></span><button disabled type="button" className="lnk">{"Change"}</button></li></ul>{" "}<button disabled type="button" className="adb" style={{"width": "100%"}}>{"Draw a no-camera zone"}</button>{" "}</section>{" "}</div>{" "}</main>{" "}<footer style={{"marginTop": "auto", "padding": "18px 32px 26px", "display": "flex", "flexWrap": "wrap", "justifyContent": "space-between", "gap": "8px 20px", "fontSize": "12px", "color": "var(--c6E6E73)", "borderTop": "1px solid rgba(0,0,0,.08)"}}><span>{"© 2026 Campus Inspection Robot · IT Project, Sunway College"}</span><nav aria-label="Legal" style={{"display": "flex", "flexWrap": "wrap", "gap": "16px"}}><a href="#legal/privacy" style={{"color": "var(--c3A3A3C)"}}>{"Privacy Notice"}</a><a href="#legal/terms" style={{"color": "var(--c3A3A3C)"}}>{"Terms of Use"}</a><a href="#legal/camera" style={{"color": "var(--c3A3A3C)"}}>{"Camera and Image Policy"}</a><a href="#legal/accessibility" style={{"color": "var(--c3A3A3C)"}}>{"Accessibility"}</a></nav></footer>{" "}</div>{" "}</div>
-</div>);
+  const { language, t } = useDashboardLocale();
+  const { configuration, saveConfiguration, robot } = React.useContext(DemoCtx);
+  const [editor, setEditor] = React.useState(null);
+  const [limits, setLimits] = React.useState(configuration.limits);
+  const [feedback, setFeedback] = React.useState('');
+  const [error, setError] = React.useState('');
+  const close = () => setEditor(null);
+  const open = (type, item) => setEditor({ type, item });
+
+  function save(update, message) {
+    saveConfiguration(update, message);
+    setFeedback(message);
+  }
+
+  function saveLimits(event) {
+    event.preventDefault();
+    const next = Object.fromEntries(limitFields.map(([key]) => [key, Number(limits[key])]));
+    if (next.temperatureMin > next.temperatureMax || next.humidityMin > next.humidityMax) {
+      setError('Minimum values must be less than or equal to their maximums.');
+      return;
+    }
+    setError('');
+    save({ limits: next }, 'Saved reading limits');
+  }
+
+  return (
+    <DashboardPage title={t("Admin")} className="pg-admin" description={t("Manage the local inspection configuration and robot simulator.")}
+      actions={<button className="btn" type="button" onClick={() => open('log')}>{t("View change log")}</button>}>
+      <p className="workflow-feedback" role="status">{changeMessage(feedback, t)}</p>
+      <div className="workflow-grid">
+        <section className="card workflow-panel" aria-labelledby="checkpoints-admin">
+          <div className="workflow-heading"><h2 id="checkpoints-admin">{t("Checkpoints")}</h2>
+            <button className="btn primary" type="button" onClick={() => open('checkpoint')}>{t("Add checkpoint")}</button></div>
+          <ul className="workflow-list">
+            {configuration.checkpoints.map(item => <li key={item.id} className="workflow-row">
+              <div><strong>{item.id} · {item.room}</strong><br /><span className="muted">{t(item.location)} · {t(item.active ? 'Active' : 'Inactive')} · {t(item.photo ? 'Photos allowed' : 'No photos')}</span></div>
+              <button className="btn" type="button" aria-label={t('Edit checkpoint') + ' ' + item.id} onClick={() => open('checkpoint', item)}>{t("Edit")}</button>
+            </li>)}
+          </ul>
+        </section>
+        <section className="card workflow-panel" aria-labelledby="robot-health">
+          <h2 id="robot-health">{t("Robot 01 health")}</h2>
+          <p>{configuration.healthCheckedAt ? t('Last check {time}', { time: campusTime(configuration.healthCheckedAt, language) }) : t('No simulator health check run yet.')}</p>
+          <p className="muted">{configuration.healthCheckedAt && t('Simulator responding. Robot mode: {mode}.', { mode: t(robotLabels[robot.mode]) })}</p>
+          <button className="btn" type="button" onClick={() => save({ healthCheckedAt: Date.now() }, 'Simulator health check passed')}>{t("Run health check")}</button>
+        </section>
+        <section className="card workflow-panel" aria-labelledby="alert-limits">
+          <h2 id="alert-limits">{t("Alert limits")}</h2>
+          <p className="muted">{t("Saved temperature, humidity and PM2.5 limits apply to the air quality report. The gas limit is stored for use with sensor data.")}</p>
+          <form className="workflow-form" onSubmit={saveLimits}>
+            <div className="workflow-fields">
+              {limitFields.map(([key, label, min, max]) => <label key={key}>{t(label)}
+                <input type="number" required min={min} max={max} step="0.1" value={limits[key]}
+                  onChange={event => { setLimits(current => ({ ...current, [key]: event.target.value })); setError(''); }} />
+              </label>)}
+            </div>
+            {error && <p role="alert">{t(error)}</p>}
+            <button className="btn primary" type="submit">{t("Save limits")}</button>
+          </form>
+        </section>
+        <section className="card workflow-panel" aria-labelledby="people-admin">
+          <div className="workflow-heading"><h2 id="people-admin">{t("People")}</h2>
+            <button className="btn" type="button" onClick={() => open('person')}>{t("Invite")}</button></div>
+          {configuration.people.length ? <ul className="workflow-list">{configuration.people.map(person =>
+            <li key={person.email}>{person.email} · {t(person.role)}</li>)}</ul> : <p className="muted">{t("No local roster entries.")}</p>}
+        </section>
+        <section className="card workflow-panel" aria-labelledby="patrols-admin">
+          <div className="workflow-heading"><h2 id="patrols-admin">{t("Patrol schedule")}</h2>
+            <button className="btn primary" type="button" onClick={() => open('patrol')}>{t("Add patrol")}</button></div>
+          <p className="muted">{t("Uses campus time. A scheduled patrol starts when the dashboard is open and the simulator is docked.")}</p>
+          <ul className="workflow-list">{[...configuration.patrols].sort((left, right) => left.time.localeCompare(right.time)).map(item =>
+            <li className="workflow-row" key={item.id}><div><strong>{item.time} · {t(item.name)}</strong><br />
+              <span className="muted">{item.days.map(day => t(day)).join(', ')} · {t(item.active ? 'Active' : 'Paused')}</span></div>
+              <button className="btn" type="button" aria-label={t('Edit patrol') + ' ' + t(item.name)} onClick={() => open('patrol', item)}>{t("Edit")}</button>
+            </li>)}</ul>
+        </section>
+        <section className="card workflow-panel" aria-labelledby="privacy-admin">
+          <div className="workflow-heading"><h2 id="privacy-admin">{t("Camera and access rules")}</h2>
+            <button className="btn" type="button" onClick={() => open('zone')}>{t("Add restricted zone")}</button></div>
+          <ul className="workflow-list">{configuration.zones.map(item => <li key={item.id} className="workflow-row">
+            <span>{t(item.name)} · {t(item.rule)}{item.checkpoint && ' · ' + item.checkpoint}</span>
+            <button className="btn" type="button" aria-label={t('Edit restricted zone') + ' ' + t(item.name)} onClick={() => open('zone', item)}>{t("Edit")}</button>
+          </li>)}</ul>
+          <div className="workflow-row"><span>{t('Photo request history · {hours} hours', { hours: configuration.retentionHours })}</span>
+            <button className="btn" type="button" onClick={() => open('retention')}>{t("Change retention")}</button></div>
+        </section>
+      </div>
+      {editor?.type === 'log' && <WorkflowDialog title={t("Change log")} onClose={close}>
+        {configuration.changes.length ? <ol className="workflow-list">{configuration.changes.map((change, index) =>
+          <li key={index}>{campusTime(change.timestamp, language)} · {changeMessage(change.message, t)}</li>)}</ol> : <p>{t("No changes recorded.")}</p>}
+        <button className="btn" type="button" onClick={close}>{t("Close")}</button>
+      </WorkflowDialog>}
+      {editor && editor.type !== 'log' && <Editor {...editor} configuration={configuration} save={save} onClose={close} />}
+    </DashboardPage>
+  );
 }

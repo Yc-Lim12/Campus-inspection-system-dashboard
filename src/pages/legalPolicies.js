@@ -7,7 +7,7 @@ export const policySections = [
     title: 'Privacy Notice',
     titleMs: 'Notis Privasi',
     en: {
-      demo: 'This demo uses sample inspection data. It stores display preferences in your browser and your selected demo role in the current tab. Signing out clears the demo session. Leave the optional login fields blank or use sample details.',
+      demo: 'This demo uses sample inspection data. It stores display preferences, local configuration, incident updates and simulated robot activity in your browser. Your selected demo role stays in the current tab until sign-out.',
       blocks: [
         {
           title: 'What we plan to collect',
@@ -53,7 +53,7 @@ export const policySections = [
       ],
     },
     ms: {
-      demo: 'Demo ini menggunakan data pemeriksaan contoh. Keutamaan paparan disimpan dalam pelayar dan peranan demo disimpan dalam tab semasa. Log keluar menamatkan sesi demo. Biarkan ruang log masuk pilihan kosong atau gunakan butiran contoh.',
+      demo: 'Demo ini menggunakan data pemeriksaan contoh. Tetapan paparan, konfigurasi tempatan, kemas kini insiden dan aktiviti robot simulasi disimpan dalam pelayar. Peranan demo kekal dalam tab sehingga anda log keluar.',
       blocks: [
         {
           title: 'Data yang dirancang untuk dikumpul',
@@ -104,7 +104,7 @@ export const policySections = [
     title: 'Camera and Image Policy',
     titleMs: 'Dasar Kamera dan Imej',
     en: {
-      demo: 'The demo displays an illustration. Simulating a photo request changes the displayed timestamp. The physical camera and microphone are not connected.',
+      demo: 'The demo displays an illustration. Simulating a photo request records the time, checkpoint and demo role in your browser for the configured retention period.',
       blocks: [
         {
           title: 'When photos can be taken',
@@ -122,7 +122,7 @@ export const policySections = [
       ],
     },
     ms: {
-      demo: 'Demo ini memaparkan ilustrasi. Permintaan foto simulasi mengubah cap masa pada skrin. Kamera dan mikrofon sebenar tidak disambungkan.',
+      demo: 'Demo ini memaparkan ilustrasi. Permintaan foto simulasi menyimpan masa, pusat pemeriksaan dan peranan demo dalam pelayar mengikut tempoh penyimpanan yang ditetapkan.',
       blocks: [
         {
           title: 'Bila foto boleh diambil',
@@ -145,7 +145,7 @@ export const policySections = [
     title: 'AI Assistant Notice',
     titleMs: 'Notis Pembantu AI',
     en: {
-      demo: 'The demo shows a sample conversation. It sends no questions, images, or records to an AI provider and issues no robot commands.',
+      demo: 'The demo assistant uses built-in rules to answer questions from sample readings and local alerts. Confirmed commands update the robot simulator. Conversation history is stored in the current browser tab until sign-out.',
       blocks: [
         {
           title: 'Answers and data shared',
@@ -163,7 +163,7 @@ export const policySections = [
       ],
     },
     ms: {
-      demo: 'Demo ini memaparkan perbualan contoh. Demo tidak menghantar soalan, imej atau rekod kepada penyedia AI dan tidak mengeluarkan arahan robot.',
+      demo: 'Pembantu demo menggunakan peraturan terbina dalam untuk menjawab soalan berdasarkan bacaan contoh dan amaran tempatan. Arahan yang disahkan mengemas kini simulator robot. Sejarah perbualan disimpan dalam tab pelayar semasa sehingga anda log keluar.',
       blocks: [
         {
           title: 'Jawapan dan data yang dikongsi',
@@ -186,7 +186,7 @@ export const policySections = [
     title: 'Terms of Use',
     titleMs: 'Terma Penggunaan',
     en: {
-      demo: 'Use the dashboard with sample data for project demonstration. Sample incident updates are cleared on sign-out or reload.',
+      demo: 'Use the dashboard with sample data for project demonstration. Demo incident updates are saved in the current browser.',
       blocks: [{
         title: 'Rules for campus use',
         items: [
@@ -197,7 +197,7 @@ export const policySections = [
       }],
     },
     ms: {
-      demo: 'Gunakan papan pemuka dengan data contoh untuk demonstrasi projek. Kemas kini insiden contoh dipadam daripada sesi apabila anda log keluar atau memuat semula halaman.',
+      demo: 'Gunakan papan pemuka dengan data contoh untuk demonstrasi projek. Kemas kini insiden demo disimpan dalam pelayar semasa.',
       blocks: [{
         title: 'Peraturan penggunaan di kampus',
         items: [

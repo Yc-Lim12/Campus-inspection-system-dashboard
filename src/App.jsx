@@ -1,5 +1,10 @@
 import React from 'react';
+import { emptyAssistantHistory, readAssistantHistory, saveAssistantHistory } from './assistantHistory.js';
+import { dashboardLanguage, translateDashboard } from './dashboardLocale.js';
 import { DEMO_INCIDENT_TRANSITIONS, DemoCtx, ThemeCtx, SearchCtx, RouteCtx } from './ctx.js';
+import { campusDate, canRequestPhoto, initialConfiguration, initialRobot, reachableCheckpoints, useStoredState } from './dashboardState.js';
+import { applyIncidentUpdates } from './incidents.js';
+import { applyDisplayPreferences, initialPreferences, playAlertTone } from './preferences.js';
 import Palette from './Palette.jsx';
 import meta from './meta.json';
 import Login from './pages/Login.jsx'; import Loading from './pages/Loading.jsx'; import Overview from './pages/Overview.jsx';
@@ -12,7 +17,7 @@ const NO_SEARCH = new Set(['login', 'loading']);
 const readLocation = () => {
   const [name, section] = location.hash.slice(1).split('/');
   const route = Object.prototype.hasOwnProperty.call(ROUTES, name) ? name : 'login';
-  return { route, section: route === 'legal' ? section : undefined };
+  return { route, section };
 };
 const store = {
   get: () => { try { return localStorage.getItem('ci-theme'); } catch { return null; } },
@@ -45,10 +50,25 @@ export default function App() {
   const [request, setRequest] = React.useState(readLocation);
   const [theme, setThemeState] = React.useState(() => store.get() || 'light');
   const [search, setSearch] = React.useState(false);
-  const [incidentStatuses, setIncidentStatuses] = React.useState({});
+  const [incidentUpdates, setIncidentUpdates] = useStoredState('ci-incident-updates', {});
+  const [manualIncidents, setManualIncidents] = useStoredState('ci-manual-incidents', []);
+  const [savedPreferences, setPreferences] = useStoredState('ci-preferences', initialPreferences);
+  const preferences = React.useMemo(() => ({ ...initialPreferences, ...savedPreferences }), [savedPreferences]);
+  const [configuration, setConfiguration] = useStoredState('ci-configuration', initialConfiguration);
+  const [robot, setRobot] = useStoredState('ci-robot-simulator', initialRobot);
+  const [lastScheduledPatrol, setLastScheduledPatrol] = useStoredState('ci-scheduled-patrol', null);
+  const [photoRequests, setPhotoRequests] = useStoredState('ci-photo-requests', []);
+  const [alertAnnouncement, setAlertAnnouncement] = React.useState('');
+  const [assistantHistory, setAssistantHistory] = React.useState(() => readAssistantHistory(role));
+  const incidents = [...manualIncidents.map(incident => ({ ...incident, ...incidentUpdates[incident.id] })),
+    ...applyIncidentUpdates(incidentUpdates)];
   const route = request.route === 'legal' || role ? request.route : 'login';
   const resolvedRoute = route === 'admin' && role !== 'admin' ? 'overview' : route;
   const searchEnabled = Boolean(role) && !NO_SEARCH.has(resolvedRoute);
+
+  React.useEffect(() => {
+    saveAssistantHistory(role, assistantHistory);
+  }, [role, assistantHistory]);
 
   React.useEffect(() => {
     function onHashChange() {
@@ -74,7 +94,64 @@ export default function App() {
     document.documentElement.dataset.demoRole = role || 'guest';
   }, [role]);
   React.useEffect(() => { applyTheme(theme); }, [theme]);
-  React.useEffect(() => { document.title = meta.titles[resolvedRoute] || 'Campus Inspection'; }, [resolvedRoute]);
+  React.useLayoutEffect(() => {
+    applyDisplayPreferences(preferences);
+  }, [preferences]);
+  React.useEffect(() => {
+    if (!['outbound', 'returning'].includes(robot.mode) && !(robot.mode === 'patrol' && robot.updated)) return;
+    const timer = window.setTimeout(() => {
+      setRobot(current => {
+        if (current.updated !== robot.updated || current.mode !== robot.mode || current.destination !== robot.destination) return current;
+        const updated = Date.now();
+        if (current.mode === 'returning') return { ...current, mode: 'docked', position: null, updated };
+        const path = reachableCheckpoints(configuration);
+        const index = path.findIndex(item => item.id === current.destination);
+        if (index < 0) return { ...current, mode: 'stopped', destination: null, updated };
+        const position = path[index].id;
+        if (current.mode === 'outbound') return { ...current, mode: 'arrived', position, updated };
+        const destination = path[index + 1]?.id;
+        return destination ? { mode: 'patrol', position, destination, updated }
+          : { mode: 'returning', position, destination: null, updated };
+      });
+    }, Math.max(0, robot.updated + 5000 - Date.now()));
+    return () => window.clearTimeout(timer);
+  }, [configuration, robot, setRobot]);
+  React.useEffect(() => {
+    if (!role || robot.mode !== 'docked') return;
+    const path = reachableCheckpoints(configuration);
+    if (!path.length) return;
+
+    function checkSchedule() {
+      const now = new Date();
+      const timeZone = 'Asia/Kuala_Lumpur';
+      const day = now.toLocaleDateString('en-GB', { weekday: 'short', timeZone });
+      const time = now.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit', timeZone });
+      const slot = campusDate(now) + ' ' + time;
+      if (lastScheduledPatrol === slot ||
+        !configuration.patrols.some(patrol => patrol.active && patrol.days.includes(day) && patrol.time === time)) return;
+      setLastScheduledPatrol(slot);
+      setRobot(current => current.mode === 'docked'
+        ? { ...current, mode: 'patrol', destination: path[0].id, updated: Date.now() } : current);
+    }
+
+    checkSchedule();
+    const timer = window.setInterval(checkSchedule, 5000);
+    return () => window.clearInterval(timer);
+  }, [role, robot.mode, configuration, lastScheduledPatrol, setLastScheduledPatrol, setRobot]);
+  React.useEffect(() => {
+    if (!photoRequests.length) return;
+    const maxAge = configuration.retentionHours * 3600000;
+    const expires = Math.min(...photoRequests.map(item => item.timestamp + maxAge));
+    const timer = window.setTimeout(() => {
+      setPhotoRequests(current => current.filter(item => Date.now() - item.timestamp < maxAge));
+    }, Math.max(0, expires - Date.now()));
+    return () => window.clearTimeout(timer);
+  }, [configuration.retentionHours, photoRequests, setPhotoRequests]);
+  React.useLayoutEffect(() => {
+    const language = dashboardLanguage(preferences.dashboardLanguage);
+    document.documentElement.lang = language;
+    document.title = translateDashboard(language, meta.titles[resolvedRoute] || 'Campus Inspection');
+  }, [resolvedRoute, preferences.dashboardLanguage]);
   React.useEffect(() => {
     if (!searchEnabled) return;
     function onKeyDown(e) {
@@ -91,6 +168,7 @@ export default function App() {
   }, [searchEnabled]);
 
   function enterDemo(selectedRole) {
+    if (selectedRole !== role) setAssistantHistory(emptyAssistantHistory);
     demoSession.open(selectedRole);
     setRole(selectedRole);
     setRequest({ route: 'loading' });
@@ -101,7 +179,8 @@ export default function App() {
     demoSession.close();
     setRole(null);
     setSearch(false);
-    setIncidentStatuses({});
+    setAlertAnnouncement('');
+    setAssistantHistory(emptyAssistantHistory);
     setRequest({ route: 'login' });
     history.replaceState(null, '', '#login');
     window.scrollTo(0, 0);
@@ -113,22 +192,82 @@ export default function App() {
     e?.target?.blur?.();
     setSearch(true);
   };
-  const setIncidentStatus = (id, status) => {
-    setIncidentStatuses((current) => {
-      const previous = current[id] || 'detected';
-      if (!DEMO_INCIDENT_TRANSITIONS[previous].includes(status)) return current;
-      return { ...current, [id]: status };
+  function updateIncident(incident, changes) {
+    const timestamp = Date.now();
+    setIncidentUpdates(current => {
+      const previous = { ...incident, ...current[incident.id] };
+      if (changes.status && !DEMO_INCIDENT_TRANSITIONS[previous.status].includes(changes.status)) return current;
+      const activity = { status: changes.status, assignment: changes.assignment, workOrder: changes.workOrder, note: changes.note };
+      const updates = Object.fromEntries(Object.entries(changes).filter(([key, value]) => key !== 'note' && value !== undefined));
+      return { ...current, [incident.id]: {
+        ...current[incident.id], ...updates, history: [...previous.history, { timestamp, ...activity }],
+      } };
     });
-  };
+  }
+
+  function notifyAlert(incident) {
+    if (preferences.severity === 'high' && incident.severity !== 'High') return;
+    if (preferences.announce) setAlertAnnouncement(incident);
+    if (preferences.sound) void playAlertTone(incident.severity.toLowerCase()).catch(() => {});
+  }
+
+  function addIncident(fields) {
+    const now = new Date();
+    const incident = {
+      ...fields, id: 'INC-' + now.getTime().toString(36).toUpperCase(),
+      day: campusDate(now),
+      time: now.toLocaleTimeString('en-GB', { timeZone: 'Asia/Kuala_Lumpur', hour: '2-digit', minute: '2-digit' }),
+      status: 'detected', assignment: 'Unassigned', history: [],
+    };
+    setManualIncidents(current => [incident, ...current]);
+    notifyAlert(incident);
+    return incident.id;
+  }
+
+  function saveConfiguration(changes, message) {
+    if (role !== 'admin') return;
+    setConfiguration(current => ({
+      ...current, ...changes, changes: [{ timestamp: Date.now(), message }, ...current.changes],
+    }));
+  }
+
+  function commandRobot(command, destination) {
+    if (!role) return false;
+    const checkpoints = reachableCheckpoints(configuration);
+    if (command === 'send' && !checkpoints.some(item => item.id === destination)) return false;
+    const next = {
+      send: { mode: 'outbound', destination },
+      return: { mode: 'returning', destination: null },
+      start: { mode: 'patrol', destination: checkpoints[0]?.id },
+      stop: { mode: 'stopped', destination: null },
+    }[command];
+    if (!next || (command === 'start' && !next.destination)) return false;
+    setRobot(current => ({ ...current, ...next, updated: Date.now() }));
+    return true;
+  }
+
+  function takePhoto() {
+    if (!canRequestPhoto(configuration, robot)) return;
+    const timestamp = Date.now();
+    setPhotoRequests(current => [{ timestamp, role, checkpoint: robot.position }, ...current]
+      .filter(item => timestamp - item.timestamp < configuration.retentionHours * 3600000));
+  }
 
   const Page = ROUTES[resolvedRoute];
   return (
-    <DemoCtx.Provider value={{ role, signOut, incidentStatuses, setIncidentStatus }}>
+    <DemoCtx.Provider value={{
+      role, signOut, incidents, addIncident, updateIncident, preferences, setPreferences,
+      configuration, saveConfiguration, robot, commandRobot, photoRequests, takePhoto, assistantHistory, setAssistantHistory,
+    }}>
       <ThemeCtx.Provider value={{ theme, setTheme }}>
         <SearchCtx.Provider value={{ openSearch }}>
           <RouteCtx.Provider value={resolvedRoute}>
             {resolvedRoute === 'login' ? <Login onEnter={enterDemo} /> : <Page key={resolvedRoute} section={request.section} />}
             <Palette open={searchEnabled && search} onClose={() => setSearch(false)} />
+            <span className="sr" role="status">{alertAnnouncement && translateDashboard(preferences.dashboardLanguage, 'New {severity} alert: {title}', {
+              severity: translateDashboard(preferences.dashboardLanguage, alertAnnouncement.severity),
+              title: translateDashboard(preferences.dashboardLanguage, alertAnnouncement.title),
+            })}</span>
           </RouteCtx.Provider>
         </SearchCtx.Provider>
       </ThemeCtx.Provider>

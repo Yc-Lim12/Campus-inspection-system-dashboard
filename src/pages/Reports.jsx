@@ -1,12 +1,227 @@
 import React from 'react';
+import DashboardPage from '../DashboardPage.jsx';
+import { DemoCtx } from '../ctx.js';
+import { useDashboardLocale } from '../dashboardLocale.js';
 import { exportSampleTables } from '../exportSampleTables.js';
-import { SidebarProfile } from '../Sidebar.jsx';
-import { ThemeCtx, SearchCtx } from '../ctx.js';
+import { INCIDENT_LABELS } from '../incidents.js';
+import { sampleInspectionRecords } from '../inspectionRecords.js';
 
-export default function Reports() {
-  const { openSearch } = React.useContext(SearchCtx);
-  
-  return (<div className="pg pg-reports">
-<div style={{"minHeight": "100vh", "margin": "0 auto", "display": "flex", "flexWrap": "wrap"}}>{" "}<a href="#main" className="skip">{"Skip to main content"}</a>{" "}<aside className="side" aria-label="Sidebar">{" "}<div className="brand"><span className="appicon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><rect x="5" y="8" width="14" height="10" rx="3"></rect><path d="M12 8V5"></path><circle cx="12" cy="4" r="1"></circle><circle cx="9.5" cy="13" r="1" fill="#8CC4F0" stroke="#8CC4F0"></circle><circle cx="14.5" cy="13" r="1" fill="#8CC4F0" stroke="#8CC4F0"></circle></svg></span><div><strong>{"Campus Inspection"}</strong><span>{"Sunway Univ · Level 8"}</span></div></div>{" "}<label className="sq"><span className="sr">{"Search everything"}</span><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true"><circle cx="11" cy="11" r="7"></circle><path d="m20 20-3.5-3.5"></path></svg><input id="gq" type="search" placeholder="Search…" onFocus={openSearch} readOnly /><kbd>{"⌘K"}</kbd></label>{" "}<a href="#camera" className="robot"><span className="dot" aria-hidden="true"></span><span><strong>{"Patrolling"}</strong><span>{"CP3 next · Battery 78%"}</span></span></a>{" "}<nav aria-label="Main" className="sn">{" "}<a href="#overview" className="si"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M3 11.5 12 4l9 7.5V20a1 1 0 0 1-1 1h-5v-6h-6v6H4a1 1 0 0 1-1-1z"></path></svg><span>{"Overview"}</span></a>{" "}<a href="#camera" className="si"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><rect x="3" y="6" width="13" height="12" rx="2"></rect><path d="m16 10 5-3v10l-5-3"></path></svg><span>{"Camera"}</span></a>{" "}<a href="#alerts" className="si"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M12 3 2 20h20L12 3Z"></path><path d="M12 10v4"></path><path d="M12 17h.01"></path></svg><span>{"Alerts"}</span><span className="badge" aria-label="2 open">{"2"}</span></a>{" "}<a href="#records" className="si"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><rect x="4" y="3" width="16" height="18" rx="2"></rect><path d="M8 8h8M8 12h8M8 16h5"></path></svg><span>{"Records"}</span></a>{" "}<a href="#reports" className="si on" aria-current="page"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"></path></svg><span>{"Reports"}</span></a>{" "}<a href="#assistant" className="si"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M4 5h16v11H9l-5 4z"></path><path d="M8 10h8"></path></svg><span>{"Assistant"}</span></a>{" "}<p className="sec">{"Manage"}</p>{" "}<a href="#admin" className="si"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><circle cx="12" cy="8" r="3.5"></circle><path d="M5 20c1-4 4-6 7-6s6 2 7 6"></path></svg><span>{"Admin"}</span></a>{" "}<a href="#settings" className="si"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"></circle><path d="M12 2v3M12 19v3M2 12h3M19 12h3M4.9 4.9l2.1 2.1M17 17l2.1 2.1M4.9 19.1 7 17M17 7l2.1-2.1"></path></svg><span>{"Settings"}</span></a>{" "}<a href="#guidebook" className="si"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"></circle><path d="M9.5 9.5a2.5 2.5 0 1 1 3.5 2.3c-.6.3-1 .8-1 1.5v.7"></path><path d="M12 17h.01"></path></svg><span>{"Guidebook"}</span></a>{" "}</nav>{" "}<SidebarProfile />{" "}</aside>{" "}<div className="content">{" "}<main id="main" tabIndex={-1} style={{"padding": "22px 28px 32px", "display": "flex", "flexDirection": "column", "gap": "18px"}}>{" "}<div style={{"display": "flex", "flexWrap": "wrap", "alignItems": "center", "gap": "12px"}}>{" "}<h1 style={{"margin": "0 8px 0 0", "fontSize": "28px", "fontWeight": "700", "letterSpacing": "-.02em"}}>{"Reports"}</h1><p className="demo-feature-note">Sample report. The export contains the incident summary table.</p>{" "}<div className="rgrp"><button type="button" className="rsel" disabled title="Fixed sample report">{"Weekly "}<svg width="10" height="10" viewBox="0 0 10 10" aria-hidden="true"><path d="M2 3.5 5 6.5 8 3.5" fill="none" stroke="currentColor" strokeWidth="1.5"></path></svg></button><button type="button" className="rsel" disabled title="Fixed sample report" style={{"color": "var(--c3A3A3C)", "borderLeft": "1px solid var(--cDDE1E6)"}}><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="2"></rect><path d="M3 10h18M8 3v4M16 3v4"></path></svg>{"1 Sep – 23 Nov 2026"}</button></div>{" "}<label className="srch" style={{"marginLeft": "auto"}}><span className="sr">{"Search reports"}</span><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true"><circle cx="11" cy="11" r="7"></circle><path d="m20 20-3.5-3.5"></path></svg><input id="rq" type="search" placeholder="Search incident ID, room or hazard" onFocus={openSearch} readOnly /></label>{" "}<button type="button" className="rbtn" onClick={event => exportSampleTables(event, "sample-incident-summary.csv")}>{"Export sample data"}</button>{" "}</div>{" "}<nav aria-label="Report sections" className="rtabs"><a href="#reports" aria-current="page" className="on">{"Summary"}</a><a href="#alerts">{"Incidents"}</a><a href="#records">{"Air quality"}</a><a href="#records">{"Patrol log"}</a></nav>{" "}<div style={{"display": "flex", "flexWrap": "wrap", "gap": "8px"}}>{" "}<button type="button" className="rchip" disabled title="Fixed sample report">{"Checkpoint"}</button><button type="button" className="rchip" disabled title="Fixed sample report">{"Hazard type"}</button><button type="button" className="rchip" disabled title="Fixed sample report">{"Severity"}</button><button type="button" className="rchip" disabled title="Fixed sample report">{"Status"}</button><button type="button" className="rchip" disabled title="Fixed sample report">{"Assigned to"}</button>{" "}</div>{" "}<div className="rcard" style={{"display": "grid", "gridTemplateColumns": "repeat(auto-fit, minmax(150px, 1fr))", "padding": "0"}}>{" "}<div className="rkpi"><span>{"Inspection coverage"}</span><strong>{"97.8%"}</strong><em>{"target 95%"}</em></div>{" "}<div className="rkpi"><span>{"Robot availability"}</span><strong>{"94.6%"}</strong><em>{"target 90%"}</em></div>{" "}<div className="rkpi"><span>{"MTTA"}</span><strong>{"14 min"}</strong><em>{"target 30 min"}</em></div>{" "}<div className="rkpi"><span>{"MTTR"}</span><strong>{"5.6 h"}</strong><em>{"target 24 h"}</em></div>{" "}<div className="rkpi"><span>{"Fixed within SLA"}</span><strong style={{"color": "var(--cC25E00)"}}>{"87.2%"}</strong><em style={{"color": "var(--cC25E00)"}}>{"target 90%, missed"}</em></div>{" "}</div>{" "}<div style={{"display": "flex", "flexWrap": "wrap", "gap": "16px"}}>{" "}<section className="rcard" aria-labelledby="cr-h" style={{"flex": "1 1 440px", "minWidth": "0", "display": "flex", "flexDirection": "column"}}>{" "}<h2 id="cr-h" className="rh">{"Detected vs Resolved "}<span aria-hidden="true" style={{"color": "var(--c1E4F8C)"}}>{"›"}</span></h2>{" "}<div style={{"display": "flex", "flexWrap": "wrap", "alignItems": "center", "gap": "12px 28px", "margin": "14px 0 6px"}}>{" "}<div className="rbig"><strong>{"47"}</strong><span style={{"borderColor": "var(--c4A7FD4)", "color": "var(--c4A7FD4)"}}>{"Detected"}</span></div>{" "}<div className="rbig"><strong>{"44"}</strong><span style={{"borderColor": "var(--c3E9A6C)", "color": "var(--c2F7D56)"}}>{"Resolved"}</span></div>{" "}<div style={{"borderLeft": "1px solid var(--cE3E6EB)", "paddingLeft": "24px", "textAlign": "center"}}><strong style={{"fontSize": "40px", "fontWeight": "600", "letterSpacing": "-.02em"}}>{"93.6"}<small style={{"fontSize": "18px"}}>{"%"}</small></strong><div className="muted" style={{"fontSize": "14px"}}>{"Resolved"}</div></div>{" "}</div>{" "}<svg viewBox="0 0 720 440" role="img" aria-label="Weekly line chart from 1 September to 17 November. Detected incidents range from 2 to 7 a week, peaking in the week of 6 October. Resolved incidents follow closely behind." style={{"width": "100%", "height": "auto"}}><g stroke="#EEF0F3"><line x1="40" y1="54" x2="700" y2="54"></line><line x1="40" y1="141" x2="700" y2="141"></line><line x1="40" y1="227" x2="700" y2="227"></line><line x1="40" y1="314" x2="700" y2="314"></line><line x1="40" y1="400" x2="700" y2="400" stroke="#D5D9DF"></line></g><g fontSize="11" fill="#86868B" textAnchor="end"><text x="30" y="58">{"8"}</text><text x="30" y="145">{"6"}</text><text x="30" y="231">{"4"}</text><text x="30" y="318">{"2"}</text><text x="30" y="404">{"0"}</text></g><path d="M50 270 L50 270 L108 184 L166 314 L225 141 L283 227 L341 98 L399 270 L457 227 L515 184 L574 314 L632 270 L690 270 L690 400 L50 400 Z" fill="#4A7FD4" fillOpacity=".07"></path><polyline points="50,270 108,184 166,314 225,141 283,227 341,98 399,270 457,227 515,184 574,314 632,270 690,270" fill="none" stroke="#4A7FD4" strokeWidth="2.2" strokeLinejoin="round"></polyline><polyline points="50,314 108,227 166,270 225,184 283,227 341,141 399,227 457,270 515,227 574,270 632,314 690,227" fill="none" stroke="#3E9A6C" strokeWidth="2.2" strokeLinejoin="round"></polyline><g fill="#4A7FD4"><circle cx="50" cy="270" r="3.5"></circle><circle cx="108" cy="184" r="3.5"></circle><circle cx="166" cy="314" r="3.5"></circle><circle cx="225" cy="141" r="3.5"></circle><circle cx="283" cy="227" r="3.5"></circle><circle cx="341" cy="98" r="3.5"></circle><circle cx="399" cy="270" r="3.5"></circle><circle cx="457" cy="227" r="3.5"></circle><circle cx="515" cy="184" r="3.5"></circle><circle cx="574" cy="314" r="3.5"></circle><circle cx="632" cy="270" r="3.5"></circle><circle cx="690" cy="270" r="3.5"></circle></g><g fill="#3E9A6C"><circle cx="50" cy="314" r="3.5"></circle><circle cx="108" cy="227" r="3.5"></circle><circle cx="166" cy="270" r="3.5"></circle><circle cx="225" cy="184" r="3.5"></circle><circle cx="283" cy="227" r="3.5"></circle><circle cx="341" cy="141" r="3.5"></circle><circle cx="399" cy="227" r="3.5"></circle><circle cx="457" cy="270" r="3.5"></circle><circle cx="515" cy="227" r="3.5"></circle><circle cx="574" cy="270" r="3.5"></circle><circle cx="632" cy="314" r="3.5"></circle><circle cx="690" cy="227" r="3.5"></circle></g><line x1="341" y1="40" x2="341" y2="400" stroke="#AEB4BE" strokeDasharray="3 3"></line><g transform="translate(353 22)"><rect width="150" height="48" rx="6" fill="#FFFFFF" stroke="#DDE1E6"></rect><text x="10" y="18" fontSize="11" fill="#6E6E73">{"Week of 6 Oct"}</text><text x="10" y="36" fontSize="12" fontWeight="600" fill="#1D1D1F">{"Detected 7 · Resolved 6"}</text></g><g fontSize="11" fill="#86868B" textAnchor="middle"><text x="50" y="428">{"1/9"}</text><text x="108" y="428">{"8/9"}</text><text x="166" y="428">{"15/9"}</text><text x="225" y="428">{"22/9"}</text><text x="283" y="428">{"29/9"}</text><text x="341" y="428">{"6/10"}</text><text x="399" y="428">{"13/10"}</text><text x="457" y="428">{"20/10"}</text><text x="515" y="428">{"27/10"}</text><text x="574" y="428">{"3/11"}</text><text x="632" y="428">{"10/11"}</text><text x="690" y="428">{"17/11"}</text></g><g fontSize="11" fill="#3A3A3C"><circle cx="560" cy="12" r="4" fill="#4A7FD4"></circle><text x="570" y="16">{"Detected"}</text><circle cx="636" cy="12" r="4" fill="#3E9A6C"></circle><text x="646" y="16">{"Resolved"}</text></g></svg>{" "}<div style={{"display": "grid", "gridTemplateColumns": "repeat(2, minmax(0, 1fr))", "gap": "10px", "borderTop": "1px solid var(--cEEF0F3)", "marginTop": "auto", "paddingTop": "14px"}}>{" "}<div className="wk"><span>{"Busiest week"}</span><b>{"6 Oct"}</b><em>{"7 detected, mid-term break cleaning"}</em></div>{" "}<div className="wk"><span>{"Best week"}</span><b>{"3 Nov"}</b><em>{"2 detected, both fixed same day"}</em></div>{" "}<div className="wk"><span>{"Still unresolved"}</span><b style={{"color": "var(--cC9353A)"}}>{"3"}</b><em>{"1 open, 2 with FM"}</em></div>{" "}<div className="wk"><span>{"Most common"}</span><b>{"Water leak"}</b><em>{"19 of 47 incidents"}</em></div>{" "}</div>{" "}</section>{" "}<section className="rcard stx" aria-labelledby="st-h" style={{"flex": "1 1 400px", "minWidth": "0"}}>{" "}<div style={{"display": "flex", "justifyContent": "space-between", "alignItems": "baseline", "gap": "8px", "flexWrap": "wrap"}}><h2 id="st-h" className="rh">{"Where incidents are now "}<span aria-hidden="true" style={{"color": "var(--c1E4F8C)"}}>{"›"}</span></h2><span className="muted" style={{"fontSize": "12px"}}>{"47 incidents · 1 Sep – 23 Nov"}</span></div>{" "}<div className="dnw2">{" "}<svg viewBox="0 0 120 120" role="img" aria-label="Donut chart: 44 resolved, 2 with FM, 1 open, out of 47 incidents"><circle cx="60" cy="60" r="48" fill="none" stroke="#EEF0F3" strokeWidth="14"></circle><circle cx="60" cy="60" r="48" fill="none" stroke="#3E9A6C" strokeWidth="14" pathLength="100" strokeDasharray="92.4 100" strokeDashoffset="0" transform="rotate(-90 60 60)" className="dseg"></circle><circle cx="60" cy="60" r="48" fill="none" stroke="#4A7FD4" strokeWidth="14" pathLength="100" strokeDasharray="3.7 100" strokeDashoffset="-93" transform="rotate(-90 60 60)" className="dseg"></circle><circle cx="60" cy="60" r="48" fill="none" stroke="#D0574F" strokeWidth="14" pathLength="100" strokeDasharray="1.6 100" strokeDashoffset="-97.3" transform="rotate(-90 60 60)" className="dseg"></circle><text x="60" y="58" textAnchor="middle" fontSize="22" fontWeight="700" fill="#1D1D1F">{"93.6%"}</text><text x="60" y="76" textAnchor="middle" fontSize="10" fill="#6E6E73">{"resolved"}</text></svg>{" "}<ul className="stg"><li><span className="sd" style={{"background": "var(--c3E9A6C)"}}></span><span className="sn">{"Resolved"}</span><b>{"44"}</b><em>{"93.6% of all"}</em></li><li><span className="sd" style={{"background": "var(--c4A7FD4)"}}></span><span className="sn">{"With FM"}</span><b>{"2"}</b><em>{"5.4 h avg to fix"}</em><span className="od">{"1 overdue"}</span></li><li><span className="sd" style={{"background": "var(--cD0574F)"}}></span><span className="sn">{"Open"}</span><b>{"1"}</b><em>{"14 min avg wait"}</em></li></ul>{" "}</div>{" "}<h3 className="sub">{"Still to fix"}</h3>{" "}<ul className="todo"><li className="lt"><a href="#alerts"><span className="tg2 fm">{"With FM"}</span><span className="tx"><b>{"Wall crack, 18 cm"}</b><span>{"INC-0226 · CP3 · UC-8-10"}</span></span><span className="tm"><b>{"2 h late"}</b><i><s style={{"width": "100%"}}></s></i></span></a></li><li><a href="#alerts"><span className="tg2 op">{"Open"}</span><span className="tx"><b>{"Water leak or stain"}</b><span>{"INC-0231 · CP1 · UW-8-5"}</span></span><span className="tm"><b>{"3 h 30 min left"}</b><i><s style={{"width": "13%"}}></s></i></span></a></li><li><a href="#alerts"><span className="tg2 fm">{"With FM"}</span><span className="tx"><b>{"PM2.5 above limit"}</b><span>{"INC-0230 · CP2 · UC-8-8"}</span></span><span className="tm"><b>{"23 h 49 min left"}</b><i><s style={{"width": "2%"}}></s></i></span></a></li></ul>{" "}<h3 className="sub">{"Recently fixed"}</h3>{" "}<ul className="todo fx"><li><a href="#alerts"><span className="tg2 ok2">{"Resolved"}</span><span className="tx"><b>{"Water leak or stain"}</b><span>{"INC-0224 · CP1 · UW-8-5"}</span></span><span className="tm"><b>{"fixed in 6.2 h"}</b><i><s style={{"width": "26%"}}></s></i></span></a></li><li><a href="#alerts"><span className="tg2 ok2">{"Resolved"}</span><span className="tx"><b>{"Floor obstruction"}</b><span>{"INC-0221 · CP2 · UC-8-8"}</span></span><span className="tm"><b>{"fixed in 0.7 h"}</b><i><s style={{"width": "3%"}}></s></i></span></a></li></ul>{" "}<a href="#alerts" className="stfoot">{"Open Alerts to update or reassign"}</a>{" "}</section>{" "}</div>{" "}<div style={{"display": "flex", "flexWrap": "wrap", "gap": "16px"}}>{" "}<section className="rcard" aria-labelledby="cp-h" style={{"flex": "3 1 480px", "minWidth": "0"}}>{" "}<div style={{"display": "flex", "justifyContent": "space-between", "alignItems": "baseline", "flexWrap": "wrap", "gap": "8px"}}><h2 id="cp-h" className="rh">{"By checkpoint and severity "}<span aria-hidden="true" style={{"color": "var(--c1E4F8C)"}}>{"›"}</span></h2>{" "}<div style={{"display": "flex", "gap": "14px", "fontSize": "12px", "color": "var(--c6E6E73)"}}><span><i className="lg" style={{"background": "var(--cD0574F)"}}></i>{"High"}</span><span><i className="lg" style={{"background": "var(--cDDA03E)"}}></i>{"Medium"}</span><span><i className="lg" style={{"background": "var(--c9CC9FF)"}}></i>{"Low"}</span></div></div>{" "}<div style={{"display": "flex", "flexDirection": "column", "gap": "12px", "marginTop": "16px"}}>{" "}<div className="rrow"><span>{"CP1 · UW-8-5"}</span><div className="rst"><i style={{"flex": "5", "background": "var(--cD0574F)"}}>{"5"}</i><i style={{"flex": "9", "background": "var(--cDDA03E)"}}>{"9"}</i><i style={{"flex": "4", "background": "var(--c9CC9FF)", "color": "var(--c1E4F8C)"}}>{"4"}</i><b style={{"flex": "0"}}></b></div><strong>{"18"}</strong></div>{" "}<div className="rrow"><span>{"CP2 · UC-8-8"}</span><div className="rst"><i style={{"flex": "2", "background": "var(--cD0574F)"}}>{"2"}</i><i style={{"flex": "9", "background": "var(--cDDA03E)"}}>{"9"}</i><i style={{"flex": "3", "background": "var(--c9CC9FF)", "color": "var(--c1E4F8C)"}}>{"3"}</i><b style={{"flex": "4"}}></b></div><strong>{"14"}</strong></div>{" "}<div className="rrow"><span>{"CP4 · UC-8-11"}</span><div className="rst"><i style={{"flex": "1", "background": "var(--cD0574F)"}}>{"1"}</i><i style={{"flex": "5", "background": "var(--cDDA03E)"}}>{"5"}</i><i style={{"flex": "3", "background": "var(--c9CC9FF)", "color": "var(--c1E4F8C)"}}>{"3"}</i><b style={{"flex": "9"}}></b></div><strong>{"9"}</strong></div>{" "}<div className="rrow"><span>{"CP3 · UC-8-10"}</span><div className="rst"><i style={{"flex": "1", "background": "var(--cD0574F)"}}>{"1"}</i><i style={{"flex": "3", "background": "var(--cDDA03E)"}}>{"3"}</i><i style={{"flex": "2", "background": "var(--c9CC9FF)", "color": "var(--c1E4F8C)"}}>{"2"}</i><b style={{"flex": "12"}}></b></div><strong>{"6"}</strong></div>{" "}</div>{" "}</section>{" "}<section className="rcard" aria-labelledby="ty-h" style={{"flex": "2 1 320px", "minWidth": "0"}}>{" "}<h2 id="ty-h" className="rh">{"By hazard type "}<span aria-hidden="true" style={{"color": "var(--c1E4F8C)"}}>{"›"}</span></h2>{" "}<table className="rtab" style={{"marginTop": "10px"}}><caption className="sr">{"Incidents by hazard type"}</caption><thead><tr><th scope="col">{"Type"}</th><th scope="col">{"Count"}</th><th scope="col">{"Avg fix time"}</th></tr></thead><tbody><tr><td>{"Water leak or stain"}</td><td>{"19"}</td><td>{"7.4 h"}</td></tr><tr><td>{"Floor obstruction"}</td><td>{"13"}</td><td>{"0.9 h"}</td></tr><tr><td>{"Air quality"}</td><td>{"9"}</td><td>{"11.2 h"}</td></tr><tr><td>{"Wall crack"}</td><td>{"6"}</td><td>{"52.6 h"}</td></tr></tbody></table>{" "}</section>{" "}</div>{" "}<p className="muted" style={{"margin": "0"}}>{"Sample data. MTTA is mean time to acknowledge and MTTR is mean time to resolve. KPI definitions follow EN 15341:2019, and SLA targets are set by the admin."}</p>{" "}</main>{" "}<footer style={{"marginTop": "auto", "padding": "18px 32px 26px", "display": "flex", "flexWrap": "wrap", "justifyContent": "space-between", "gap": "8px 20px", "fontSize": "12px", "color": "var(--c6E6E73)", "borderTop": "1px solid rgba(0,0,0,.08)"}}><span>{"© 2026 Campus Inspection Robot · IT Project, Sunway College"}</span><nav aria-label="Legal" style={{"display": "flex", "flexWrap": "wrap", "gap": "16px"}}><a href="#legal/privacy" style={{"color": "var(--c3A3A3C)"}}>{"Privacy Notice"}</a><a href="#legal/terms" style={{"color": "var(--c3A3A3C)"}}>{"Terms of Use"}</a><a href="#legal/camera" style={{"color": "var(--c3A3A3C)"}}>{"Camera and Image Policy"}</a><a href="#legal/accessibility" style={{"color": "var(--c3A3A3C)"}}>{"Accessibility"}</a></nav></footer>{" "}</div>{" "}</div>
-</div>);
+const tabs = [['summary', 'Summary'], ['incidents', 'Incidents'], ['air-quality', 'Air quality'], ['patrol-log', 'Patrol log']];
+const emptyFilters = { checkpoint: '', from: '', to: '', hazard: '', severity: '', status: '', assignment: '' };
+const incidentFilters = ['hazard', 'severity', 'status', 'assignment'];
+
+const copy = {
+  'Review inspection activity, incident status and air readings.': ['Semak aktiviti pemeriksaan, status insiden dan bacaan udara.', '查看检查活动、事件状态和空气读数。'],
+  Summary: ['Ringkasan', '概览'], Incidents: ['Insiden', '事件'], 'Air quality': ['Kualiti udara', '空气质量'], 'Patrol log': ['Log rondaan', '巡逻日志'],
+  'Export CSV': ['Eksport CSV', '导出 CSV'], 'Report sections': ['Bahagian laporan', '报告分类'], 'Report filters': ['Penapis laporan', '报告筛选'],
+  'Search reports': ['Cari laporan', '搜索报告'], 'ID, room, hazard or status': ['ID, bilik, bahaya atau status', '编号、房间、隐患或状态'],
+  'Record ID, room or reading': ['ID rekod, bilik atau bacaan', '记录编号、房间或读数'], 'Day, patrol window or checkpoint': ['Hari, waktu rondaan atau titik pemeriksaan', '日期、巡逻时段或检查点'],
+  From: ['Dari', '开始日期'], To: ['Hingga', '结束日期'], 'All checkpoints': ['Semua titik pemeriksaan', '所有检查点'],
+  'Hazard type': ['Jenis bahaya', '隐患类型'], 'All hazards': ['Semua bahaya', '所有隐患'], Severity: ['Keparahan', '严重程度'],
+  'All severities': ['Semua tahap', '所有严重程度'], 'Any status': ['Semua status', '所有状态'],
+  'Assigned to': ['Ditugaskan kepada', '指派给'], 'All assignments': ['Semua tugasan', '所有指派'],
+  'Clear filters': ['Kosongkan penapis', '清除筛选'], 'The start date must be on or before the end date.': ['Tarikh mula mestilah pada atau sebelum tarikh akhir.', '开始日期须早于或等于结束日期。'],
+  'No results match these filters.': ['Tiada hasil yang sepadan dengan penapis ini.', '没有符合这些筛选条件的结果。'],
+  'Matching incidents': ['Insiden sepadan', '匹配的事件'], 'Matching readings': ['Bacaan sepadan', '匹配的读数'],
+  'Matching patrol windows': ['Waktu rondaan sepadan', '匹配的巡逻时段'],
+  'Incident trends': ['Trend insiden', '事件趋势'], 'Group by': ['Kumpulkan mengikut', '分组依据'],
+  Weekly: ['Mingguan', '每周'], Daily: ['Harian', '每日'], 'Week starting': ['Minggu bermula', '周起始日期'],
+  Incident: ['Insiden', '事件'], Hazard: ['Bahaya', '隐患'], Record: ['Rekod', '记录'], 'Date and time': ['Tarikh dan masa', '日期和时间'],
+  Temperature: ['Suhu', '温度'], Humidity: ['Kelembapan', '湿度'], 'Limits exceeded': ['Had dilampaui', '超限项目'],
+  'Within limits': ['Dalam had', '在限值内'], 'Patrol window': ['Waktu rondaan', '巡逻时段'],
+  'Checkpoints inspected': ['Titik pemeriksaan diperiksa', '已检查的检查点'], Readings: ['Bacaan', '读数'],
+  Morning: ['Pagi', '上午'], Afternoon: ['Petang', '下午'],
+  Acknowledged: ['Diakui', '已确认'], Reported: ['Dilaporkan', '已报告'], 'On hold': ['Ditangguhkan', '暂缓'],
+  Unassigned: ['Belum ditugaskan', '未指派'], 'Facilities Management': ['Pengurusan Fasiliti', '设施管理'],
+  'Water leak or stain': ['Kebocoran atau kesan air', '漏水或水渍'], 'Wall crack': ['Retak dinding', '墙体裂缝'],
+  'Floor obstruction': ['Halangan lantai', '地面障碍'], 'PM2.5 above limit': ['PM2.5 melebihi had', 'PM2.5 超限'],
+};
+
+function ReportTable({ label, columns, rows, empty }) {
+  return (
+    <div className="workflow-table report-table" tabIndex={0} role="region" aria-label={label}>
+      <table>
+        <caption className="sr">{label}</caption>
+        <thead><tr>{columns.map(column => <th scope="col" key={column}>{column}</th>)}</tr></thead>
+        <tbody>{rows.map(({ id, cells }) => <tr key={id}>{cells.map((cell, column) => <td key={columns[column]}>{cell}</td>)}</tr>)}</tbody>
+      </table>
+      {rows.length === 0 && <p className="report-empty" role="status">{empty}</p>}
+    </div>
+  );
+}
+
+function startOfWeek(day) {
+  const date = new Date(day + 'T00:00:00Z');
+  date.setUTCDate(date.getUTCDate() - (date.getUTCDay() + 6) % 7);
+  return date.toISOString().slice(0, 10);
+}
+
+function ReportSelect({ label, value, options, onChange }) {
+  return <label>{label}<select value={value} onChange={event => onChange(event.target.value)}>
+    {options.map(([id, text]) => <option key={id} value={id}>{text}</option>)}
+  </select></label>;
+}
+
+function ReportMetrics({ incidents, t }) {
+  const resolved = incidents.filter(item => item.status === 'resolved').length;
+  const values = [['Detected', incidents.length], ['Resolved', resolved], ['Unresolved', incidents.length - resolved]];
+  return <dl className="report-metrics">{values.map(([label, value]) => (
+    <div className="card" key={label} data-metric={label.toLowerCase()}><dt>{t(label)}</dt><dd>{value}</dd></div>
+  ))}</dl>;
+}
+
+function ResolutionChart({ groups, t }) {
+  const max = Math.max(1, ...groups.map(group => group.detected));
+  return <div className="report-chart" aria-hidden="true">
+    <div className="report-legend"><span>{t('Resolved')}</span><span>{t('Unresolved')}</span></div>
+    {groups.map(({ day, detected, resolved }) => (
+      <div className="report-chart-row" key={day}><span>{day}</span>
+        <div className="report-chart-track">
+          <span style={{ width: (resolved / max * 100) + '%' }} />
+          <span style={{ width: ((detected - resolved) / max * 100) + '%' }} />
+        </div>
+        <strong>{detected}</strong>
+      </div>
+    ))}
+  </div>;
+}
+
+export default function Reports({ section }) {
+  const { incidents, configuration } = React.useContext(DemoCtx);
+  const { language, t } = useDashboardLocale(copy);
+  const [tab, tabLabel] = tabs.find(([id]) => id === section) || tabs[0];
+  const [filters, setFilters] = React.useState(emptyFilters);
+  const [queries, setQueries] = React.useState({});
+  const [period, setPeriod] = React.useState('weekly');
+  const { checkpoint, hazard, severity, status, assignment, from, to } = filters;
+  const set = key => value => setFilters(current => ({ ...current, [key]: value }));
+  const summary = tab === 'summary';
+  const incidentTab = summary || tab === 'incidents';
+  const queryScope = incidentTab ? 'incidents' : tab;
+  const q = queries[queryScope] || '';
+  const badRange = Boolean(from && to && from > to);
+  const active = q.trim() || Object.keys(filters).some(key => filters[key] && (incidentTab || !incidentFilters.includes(key)));
+  const terms = q.trim().toLocaleLowerCase().split(/\s+/).filter(Boolean);
+  const matchesText = (...fields) => {
+    const text = fields.join(' ').toLocaleLowerCase();
+    return terms.every(term => text.includes(term));
+  };
+  const withinFilters = item => !badRange && (!from || item.day >= from) && (!to || item.day <= to) &&
+    (!checkpoint || item.checkpoint === checkpoint);
+
+  const matchingIncidents = incidentTab ? incidents.filter(item => withinFilters(item) &&
+    (!hazard || item.title === hazard) && (!severity || item.severity === severity) &&
+    (!status || item.status === status) && (!assignment || item.assignment === assignment) &&
+    matchesText(item.id, item.day, item.title, t(item.title), item.room, item.checkpoint, item.severity,
+      t(item.severity), INCIDENT_LABELS[item.status], t(INCIDENT_LABELS[item.status]), item.assignment, t(item.assignment))) : [];
+  const byPeriod = new Map();
+  for (const item of matchingIncidents) {
+    const day = period === 'weekly' ? startOfWeek(item.day) : item.day;
+    const group = byPeriod.get(day) || { day, detected: 0, resolved: 0 };
+    group.detected += 1;
+    if (item.status === 'resolved') group.resolved += 1;
+    byPeriod.set(day, group);
+  }
+  const groups = [...byPeriod.values()].sort((first, second) => second.day.localeCompare(first.day));
+
+  const readings = incidentTab ? [] : sampleInspectionRecords.filter(withinFilters);
+  const patrols = new Map();
+  if (tab === 'patrol-log') {
+    for (const reading of readings) {
+      const shift = reading.time < '12:00' ? 'Morning' : 'Afternoon';
+      const key = reading.day + ' · ' + shift;
+      const group = patrols.get(key) || { day: reading.day, shift, checkpoints: new Set(), rooms: new Set(), total: 0 };
+      group.checkpoints.add(reading.checkpoint);
+      group.rooms.add(reading.location);
+      group.total += 1;
+      patrols.set(key, group);
+    }
+  }
+
+  let columns;
+  let rows;
+  if (summary) {
+    columns = [period === 'weekly' ? 'Week starting' : 'Date', 'Detected', 'Resolved', 'Unresolved'];
+    rows = groups.map(({ day, detected, resolved }) => ({ id: day, cells: [day, detected, resolved, detected - resolved] }));
+  } else if (tab === 'incidents') {
+    columns = ['Incident', 'Date', 'Hazard', 'Checkpoint', 'Severity', 'Status', 'Assigned to'];
+    rows = matchingIncidents.map(item => ({ id: item.id, cells: [
+      <a href={'#alerts/' + item.id}>{item.id}</a>, item.day, t(item.title), item.checkpoint + ' · ' + item.room,
+      <span className="report-severity" data-severity={item.severity}>{t(item.severity)}</span>,
+      t(INCIDENT_LABELS[item.status]), t(item.assignment),
+    ] }));
+  } else if (tab === 'air-quality') {
+    columns = ['Record', 'Date and time', 'Checkpoint', 'Temperature', 'Humidity', 'PM2.5', 'Limits exceeded'];
+    const { temperatureMin, temperatureMax, humidityMin, humidityMax, pm25 } = configuration.limits;
+    rows = readings.flatMap(item => {
+      const exceeded = [
+        (item.temperature < temperatureMin || item.temperature > temperatureMax) && t('Temperature'),
+        (item.humidity < humidityMin || item.humidity > humidityMax) && t('Humidity'),
+        item.pm25 > pm25 && 'PM2.5',
+      ].filter(Boolean).join(', ');
+      const values = [item.temperature.toFixed(1) + ' °C', item.humidity + '%', item.pm25 + ' µg/m³', exceeded || t('Within limits')];
+      if (!matchesText(item.id, item.day, item.time, item.location, item.hazard, t(item.hazard), item.status, 'PM2.5', ...values)) return [];
+      return [{ id: item.id, cells: [<a href={'#records/' + item.id}>{item.id}</a>, item.day + ' ' + item.time, item.location, ...values] }];
+    });
+  } else {
+    columns = ['Patrol window', 'Checkpoints inspected', 'Readings'];
+    rows = Array.from(patrols, ([key, group]) => ({ key, ...group }))
+      .filter(group => matchesText(group.day, group.shift, t(group.shift), ...group.rooms))
+      .map(group => ({ id: group.key, cells: [group.day + ' · ' + t(group.shift), [...group.checkpoints].sort().join(', '), group.total] }));
+  }
+
+  const options = (all, values) => [['', t(all)], ...[...new Set(values)].map(value => [value, t(value)]).sort((a, b) => a[1].localeCompare(b[1], language))];
+  const matches = summary ? matchingIncidents.length : rows.length;
+  const countLabel = incidentTab ? 'Matching incidents' : tab === 'air-quality' ? 'Matching readings' : 'Matching patrol windows';
+  const placeholder = incidentTab ? 'ID, room, hazard or status' : tab === 'air-quality' ? 'Record ID, room or reading' : 'Day, patrol window or checkpoint';
+  function clearFilters() {
+    setQueries(current => ({ ...current, [queryScope]: '' }));
+    setFilters(current => incidentTab ? emptyFilters : { ...current, from: '', to: '', checkpoint: '' });
+  }
+
+  return (
+    <DashboardPage title={t('Reports')} lang={language} className="pg-reports"
+      description={t('Review inspection activity, incident status and air readings.')}
+      actions={<button className="btn primary" type="button" disabled={!rows.length}
+        onClick={event => exportSampleTables(event, tab + '-report.csv')}>{t('Export CSV')}</button>}>
+      <nav className="report-tabs" aria-label={t('Report sections')}>
+        {tabs.map(([id, label]) => <a key={id} aria-current={id === tab ? 'page' : undefined} href={'#reports/' + id}>{t(label)}</a>)}
+      </nav>
+      <section className="card report-filters" aria-label={t('Report filters')}>
+        <div className="report-filter-heading">
+          <h2>{t('Report filters')}</h2>
+          <button className="btn" type="button" disabled={!active} onClick={clearFilters}>{t('Clear filters')}</button>
+        </div>
+        <div className="workflow-form report-fields">
+          <label className="report-search">{t('Search reports')}<input type="search" value={q}
+            onChange={event => setQueries(current => ({ ...current, [queryScope]: event.target.value }))}
+            placeholder={t(placeholder)} autoComplete="off" /></label>
+          <ReportSelect label={t('Checkpoint')} value={checkpoint} options={[['', t('All checkpoints')], ...configuration.checkpoints.map(item =>
+            [item.id, item.id + ' · ' + item.room])]} onChange={set('checkpoint')} />
+          <label>{t('From')}<input type="date" value={from} onChange={event => set('from')(event.target.value)} aria-invalid={badRange || undefined} /></label>
+          <label>{t('To')}<input type="date" value={to} onChange={event => set('to')(event.target.value)} aria-invalid={badRange || undefined} /></label>
+        </div>
+        {incidentTab && <div className="workflow-form report-incident-fields">
+          <ReportSelect label={t('Hazard type')} value={hazard} options={options('All hazards', incidents.map(item => item.title))} onChange={set('hazard')} />
+          <ReportSelect label={t('Severity')} value={severity} options={options('All severities', ['High', 'Medium', 'Low'])} onChange={set('severity')} />
+          <ReportSelect label={t('Status')} value={status} options={[[ '', t('Any status') ], ...Object.entries(INCIDENT_LABELS).map(([id, label]) => [id, t(label)])]} onChange={set('status')} />
+          <ReportSelect label={t('Assigned to')} value={assignment} options={options('All assignments', incidents.map(item => item.assignment))} onChange={set('assignment')} />
+        </div>}
+        {badRange && <p className="report-error" role="alert">{t('The start date must be on or before the end date.')}</p>}
+      </section>
+      {summary && <ReportMetrics incidents={matchingIncidents} t={t} />}
+      <section className="card report-results" aria-labelledby="report-result-heading">
+        <div className="report-result-heading">
+          <div>
+            <h2 id="report-result-heading">{t(summary ? 'Incident trends' : tabLabel)}</h2>
+            <p role="status" className="muted">{t(countLabel)} <strong>{matches}</strong></p>
+          </div>
+          {summary && <div className="workflow-form"><ReportSelect label={t('Group by')} value={period}
+            options={[['weekly', t('Weekly')], ['daily', t('Daily')]]} onChange={setPeriod} /></div>}
+        </div>
+        {summary && groups.length > 0 && <ResolutionChart groups={groups} t={t} />}
+        <ReportTable label={t(tabLabel)} columns={columns.map(t)} rows={rows} empty={t('No results match these filters.')} />
+      </section>
+    </DashboardPage>
+  );
 }

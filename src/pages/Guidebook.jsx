@@ -1,11 +1,180 @@
 import React from 'react';
-import { SidebarProfile } from '../Sidebar.jsx';
-import { ThemeCtx, SearchCtx } from '../ctx.js';
+import { useDashboardLocale } from '../dashboardLocale.js';
+import DashboardPage from '../DashboardPage.jsx';
+import { prefersReducedMotion } from '../preferences.js';
+
+const sections = [
+  {
+    id: 'alerts', label: 'Responding to alerts', title: 'When an alert comes in',
+    description: 'Open the alert, check the photo, then follow the steps for its type.',
+    topics: [
+      {
+        title: 'Water leak or stain',
+        steps: [
+          'Check the photo. If water is on the floor, place a wet floor sign or cordon off the area.',
+          'Report it to Facilities Management through the usual work order channel.',
+          'Mark the alert as Reported and add the work order number.',
+          'When fixed, mark it Resolved. The robot rechecks it on the next patrol.',
+        ],
+        note: 'Why: under the OSH Act 1994 the employer must keep the workplace safe for staff and others in it, such as students and visitors.',
+      },
+      {
+        title: 'Wall crack',
+        steps: [
+          'Compare with earlier photos in Records to see if it is growing.',
+          'Report to Facilities Management. A new or widening crack is High severity.',
+          'Only a qualified person (e.g. building engineer) decides if it is structural.',
+        ],
+      },
+      {
+        title: 'Floor obstruction or blocked exit',
+        steps: [
+          'Clear small items yourself if it is safe to do so.',
+          'A blocked fire exit or escape route is urgent. Clear it or report it at once.',
+        ],
+        note: 'Why: a blocked escape route is a fire hazard under the Fire Services Act 1988.',
+      },
+      {
+        title: 'Air quality above limit',
+        steps: [
+          'Check the reading trend. One spike may be a passing cause (cleaning, cooking).',
+          'If it stays high, report it to Facilities Management to check the air-conditioning and ventilation.',
+          'If it cannot be fixed, building management arranges an IAQ assessment by a DOSH-registered assessor.',
+        ],
+        note: "Why: the limits and the complaint steps follow DOSH's Industry Code of Practice on Indoor Air Quality 2010. The office temperature range there is 23–26 °C.",
+      },
+    ],
+  },
+  {
+    id: 'robot', label: 'Robot safety', title: 'Using the robot safely',
+    steps: [
+      'Stop robot pauses the robot simulator from the Overview and Camera pages. Use the approved on-site safety procedure during real operation.',
+      'The robot also has a physical emergency stop button on its body.',
+      'Do not lift, push or block the robot while it is moving.',
+      'If the battery is below 20%, send it back with Return.',
+    ],
+  },
+  {
+    id: 'privacy', label: 'Privacy', title: 'Privacy: your duties',
+    steps: [
+      'Use Simulate photo request only for work, such as checking the robot or an area.',
+      'Do not download or share robot photos outside work.',
+      'Before collecting real photos, agree with the university on how staff should report a privacy issue and who can review images.',
+      'This demo does not log image views.',
+    ],
+    note: 'Photos of identifiable people are personal data under the Personal Data Protection Act 2010.',
+    link: ['Read the Privacy Notice', '#legal/privacy'],
+  },
+  {
+    id: 'laws', label: 'Policies', title: 'Laws and codes this system follows',
+    references: [
+      ['Personal Data Protection Act 2010 (Act 709)', 'Camera, photos, accounts'],
+      ['Occupational Safety and Health Act 1994 (Act 514, amended 2022)', 'Hazard reporting'],
+      ['ICOP on Indoor Air Quality 2010 (DOSH)', 'Air limits, complaints'],
+      ['Fire Services Act 1988 (Act 341)', 'Blocked exits'],
+      ['Persons with Disabilities Act 2008 and WCAG 2.1 AA', 'Accessibility'],
+    ],
+    note: "This is a plain-language summary for staff, not legal advice. Sunway's own policies and Facilities Management procedures come first.",
+  },
+];
+
+function GuideBody({ entry, ordered = false, t }) {
+  const List = ordered ? 'ol' : 'ul';
+  return (
+    <div className="guide-body">
+      {entry.steps && <List>{entry.steps.map(step => <li key={step}>{t(step)}</li>)}</List>}
+      {entry.references?.map(([name, scope]) => (
+        <div className="guide-reference" key={name}><strong>{t(name)}</strong><span>{t(scope)}</span></div>
+      ))}
+      {entry.note && <p className="guide-topic-note muted">{t(entry.note)}{entry.link && <> <a href={entry.link[1]}>{t(entry.link[0])}</a></>}</p>}
+    </div>
+  );
+}
 
 export default function Guidebook() {
-  const { openSearch } = React.useContext(SearchCtx);
-  
-  return (<div className="pg pg-guidebook">
-<div style={{"minHeight": "100vh", "margin": "0 auto", "display": "flex", "flexWrap": "wrap"}}>{" "}<a href="#main" className="skip">{"Skip to main content"}</a>{" "}<aside className="side" aria-label="Sidebar">{" "}<div className="brand"><span className="appicon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><rect x="5" y="8" width="14" height="10" rx="3"></rect><path d="M12 8V5"></path><circle cx="12" cy="4" r="1"></circle><circle cx="9.5" cy="13" r="1" fill="#8CC4F0" stroke="#8CC4F0"></circle><circle cx="14.5" cy="13" r="1" fill="#8CC4F0" stroke="#8CC4F0"></circle></svg></span><div><strong>{"Campus Inspection"}</strong><span>{"Sunway Univ · Level 8"}</span></div></div>{" "}<label className="sq"><span className="sr">{"Search everything"}</span><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true"><circle cx="11" cy="11" r="7"></circle><path d="m20 20-3.5-3.5"></path></svg><input id="gq" type="search" placeholder="Search…" onFocus={openSearch} readOnly /><kbd>{"⌘K"}</kbd></label>{" "}<a href="#camera" className="robot"><span className="dot" aria-hidden="true"></span><span><strong>{"Patrolling"}</strong><span>{"CP3 next · Battery 78%"}</span></span></a>{" "}<nav aria-label="Main" className="sn">{" "}<a href="#overview" className="si"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M3 11.5 12 4l9 7.5V20a1 1 0 0 1-1 1h-5v-6h-6v6H4a1 1 0 0 1-1-1z"></path></svg><span>{"Overview"}</span></a>{" "}<a href="#camera" className="si"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><rect x="3" y="6" width="13" height="12" rx="2"></rect><path d="m16 10 5-3v10l-5-3"></path></svg><span>{"Camera"}</span></a>{" "}<a href="#alerts" className="si"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M12 3 2 20h20L12 3Z"></path><path d="M12 10v4"></path><path d="M12 17h.01"></path></svg><span>{"Alerts"}</span><span className="badge" aria-label="2 open">{"2"}</span></a>{" "}<a href="#records" className="si"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><rect x="4" y="3" width="16" height="18" rx="2"></rect><path d="M8 8h8M8 12h8M8 16h5"></path></svg><span>{"Records"}</span></a>{" "}<a href="#reports" className="si"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"></path></svg><span>{"Reports"}</span></a>{" "}<a href="#assistant" className="si"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M4 5h16v11H9l-5 4z"></path><path d="M8 10h8"></path></svg><span>{"Assistant"}</span></a>{" "}<p className="sec">{"Manage"}</p>{" "}<a href="#admin" className="si"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><circle cx="12" cy="8" r="3.5"></circle><path d="M5 20c1-4 4-6 7-6s6 2 7 6"></path></svg><span>{"Admin"}</span></a>{" "}<a href="#settings" className="si"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"></circle><path d="M12 2v3M12 19v3M2 12h3M19 12h3M4.9 4.9l2.1 2.1M17 17l2.1 2.1M4.9 19.1 7 17M17 7l2.1-2.1"></path></svg><span>{"Settings"}</span></a>{" "}<a href="#guidebook" className="si on" aria-current="page"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"></circle><path d="M9.5 9.5a2.5 2.5 0 1 1 3.5 2.3c-.6.3-1 .8-1 1.5v.7"></path><path d="M12 17h.01"></path></svg><span>{"Guidebook"}</span></a>{" "}</nav>{" "}<SidebarProfile />{" "}</aside>{" "}<div className="content">{" "}<main id="main" tabIndex={-1} style={{"padding": "28px 32px 40px", "display": "flex", "flexDirection": "column", "gap": "28px", "maxWidth": "860px"}}>{" "}<div>{" "}<h1 style={{"margin": "0", "fontSize": "30px", "fontWeight": "700", "letterSpacing": "-.025em"}}>{"Guidebook"}</h1><p className="demo-feature-note">This guide shows the intended workflow. Live robot controls and privacy administration require a connected system.</p>{" "}<p className="muted" style={{"margin": "4px 0 0", "fontSize": "15px", "maxWidth": "62ch"}}>{"Sample alert workflows, robot safety guidance and privacy topics for campus deployment."}</p>{" "}</div>{" "}<form role="search" style={{"display": "flex", "gap": "10px", "flexWrap": "wrap"}} onSubmit={(e) => e.preventDefault()}>{" "}<label htmlFor="hq" style={{"position": "absolute", "left": "-9999px"}}>{"Search the guidebook"}</label>{" "}<input id="hq" type="search" placeholder="e.g. water leak, PM2.5, stop robot" style={{"flex": "1 1 280px", "minHeight": "44px", "boxSizing": "border-box", "padding": "0 14px", "font": "inherit", "fontSize": "15px", "border": "1px solid var(--cD2D2D7)", "borderRadius": "10px", "background": "var(--cFFFFFF)", "color": "var(--c1D1D1F)"}} onFocus={openSearch} readOnly />{" "}</form>{" "}<section aria-labelledby="h-alerts">{" "}<h2 id="h-alerts" style={{"margin": "0 0 4px", "fontSize": "20px", "fontWeight": "700"}}>{"When an alert comes in"}</h2>{" "}<p className="muted" style={{"margin": "0 0 8px"}}>{"Open the alert, check the photo, then follow the steps for its type."}</p>{" "}<details open style={{"borderTop": "1px solid rgba(0,0,0,.08)", "padding": "12px 0"}}><summary style={{"minHeight": "32px", "fontSize": "16px", "fontWeight": "600", "cursor": "pointer"}}>{"Water leak or stain"}</summary>{" "}<ol style={{"margin": "8px 0 0", "paddingLeft": "20px", "lineHeight": "1.6", "maxWidth": "62ch"}}><li>{"Check the photo. If water is on the floor, place a wet floor sign or cordon off the area."}</li><li>{"Report it to Facilities Management through the usual work order channel."}</li><li>{"Mark the alert as "}<strong>{"Reported"}</strong>{" and add the work order number."}</li><li>{"When fixed, mark it "}<strong>{"Resolved"}</strong>{". The robot rechecks it on the next patrol."}</li></ol>{" "}<p className="muted" style={{"margin": "8px 0 0"}}>{"Why: under the OSH Act 1994 the employer must keep the workplace safe for staff and others in it, such as students and visitors."}</p></details>{" "}<details style={{"borderTop": "1px solid rgba(0,0,0,.08)", "padding": "12px 0"}}><summary style={{"minHeight": "32px", "fontSize": "16px", "fontWeight": "600", "cursor": "pointer"}}>{"Wall crack"}</summary>{" "}<ol style={{"margin": "8px 0 0", "paddingLeft": "20px", "lineHeight": "1.6", "maxWidth": "62ch"}}><li>{"Compare with earlier photos in Records to see if it is growing."}</li><li>{"Report to Facilities Management. A new or widening crack is "}<strong>{"High"}</strong>{" severity."}</li><li>{"Only a qualified person (e.g. building engineer) decides if it is structural."}</li></ol></details>{" "}<details style={{"borderTop": "1px solid rgba(0,0,0,.08)", "padding": "12px 0"}}><summary style={{"minHeight": "32px", "fontSize": "16px", "fontWeight": "600", "cursor": "pointer"}}>{"Floor obstruction or blocked exit"}</summary>{" "}<ol style={{"margin": "8px 0 0", "paddingLeft": "20px", "lineHeight": "1.6", "maxWidth": "62ch"}}><li>{"Clear small items yourself if it is safe to do so."}</li><li>{"A blocked fire exit or escape route is urgent. Clear it or report it at once."}</li></ol>{" "}<p className="muted" style={{"margin": "8px 0 0"}}>{"Why: a blocked escape route is a fire hazard under the Fire Services Act 1988."}</p></details>{" "}<details style={{"borderTop": "1px solid rgba(0,0,0,.08)", "borderBottom": "1px solid rgba(0,0,0,.08)", "padding": "12px 0"}}><summary style={{"minHeight": "32px", "fontSize": "16px", "fontWeight": "600", "cursor": "pointer"}}>{"Air quality above limit"}</summary>{" "}<ol style={{"margin": "8px 0 0", "paddingLeft": "20px", "lineHeight": "1.6", "maxWidth": "62ch"}}><li>{"Check the reading trend. One spike may be a passing cause (cleaning, cooking)."}</li><li>{"If it stays high, report it to Facilities Management to check the air-conditioning and ventilation."}</li><li>{"If it cannot be fixed, building management arranges an IAQ assessment by a DOSH-registered assessor."}</li></ol>{" "}<p className="muted" style={{"margin": "8px 0 0"}}>{"Why: the limits and the complaint steps follow DOSH's Industry Code of Practice on Indoor Air Quality 2010. The office temperature range there is 23–26 °C."}</p></details>{" "}</section>{" "}<section aria-labelledby="h-robot">{" "}<h2 id="h-robot" style={{"margin": "0 0 8px", "fontSize": "20px", "fontWeight": "700"}}>{"Using the robot safely"}</h2>{" "}<ul style={{"margin": "0", "paddingLeft": "20px", "lineHeight": "1.7", "maxWidth": "62ch"}}><li><strong>{"Stop robot"}</strong>{" is shown on the Overview and Camera pages. Use the approved on-site safety procedure during real operation."}</li><li>{"The robot also has a physical emergency stop button on its body."}</li><li>{"Do not lift, push or block the robot while it is moving."}</li><li>{"If the battery is below 20%, send it back with "}<strong>{"Return"}</strong>{"."}</li></ul>{" "}</section>{" "}<section aria-labelledby="h-privacy">{" "}<h2 id="h-privacy" style={{"margin": "0 0 8px", "fontSize": "20px", "fontWeight": "700"}}>{"Privacy: your duties"}</h2>{" "}<ul style={{"margin": "0", "paddingLeft": "20px", "lineHeight": "1.7", "maxWidth": "62ch"}}><li>{"Use "}<strong>{"Take photo now"}</strong>{" only for work, such as checking the robot or an area."}</li><li>{"Do not download or share robot photos outside work."}</li><li>{"Before collecting real photos, agree with the university on how staff should "}<strong>{"Report a privacy issue"}</strong>{" and who can review images."}</li><li>{"This demo does not log image views."}</li></ul>{" "}<p className="muted" style={{"margin": "8px 0 0"}}>{"Why: photos of identifiable people are personal data under the Personal Data Protection Act 2010. "}<a href="#legal">{"Read the Privacy Notice"}</a></p>{" "}</section>{" "}<section aria-labelledby="h-laws">{" "}<h2 id="h-laws" style={{"margin": "0 0 8px", "fontSize": "20px", "fontWeight": "700"}}>{"Laws and codes this system follows"}</h2>{" "}<div className="li" style={{"minHeight": "56px"}}><span style={{"flex": "1"}}><strong style={{"fontWeight": "600"}}>{"Personal Data Protection Act 2010"}</strong>{" (Act 709)"}</span><span className="muted">{"Camera, photos, accounts"}</span></div>{" "}<div className="li" style={{"minHeight": "56px"}}><span style={{"flex": "1"}}><strong style={{"fontWeight": "600"}}>{"Occupational Safety and Health Act 1994"}</strong>{" (Act 514, amended 2022)"}</span><span className="muted">{"Hazard reporting"}</span></div>{" "}<div className="li" style={{"minHeight": "56px"}}><span style={{"flex": "1"}}><strong style={{"fontWeight": "600"}}>{"ICOP on Indoor Air Quality 2010"}</strong>{" (DOSH)"}</span><span className="muted">{"Air limits, complaints"}</span></div>{" "}<div className="li" style={{"minHeight": "56px"}}><span style={{"flex": "1"}}><strong style={{"fontWeight": "600"}}>{"Fire Services Act 1988"}</strong>{" (Act 341)"}</span><span className="muted">{"Blocked exits"}</span></div>{" "}<div className="li" style={{"minHeight": "56px", "borderBottom": "1px solid rgba(0,0,0,.08)"}}><span style={{"flex": "1"}}><strong style={{"fontWeight": "600"}}>{"Persons with Disabilities Act 2008"}</strong>{" and WCAG 2.1 AA"}</span><span className="muted">{"Accessibility"}</span></div>{" "}<p className="muted" style={{"margin": "10px 0 0", "maxWidth": "62ch"}}>{"This is a plain-language summary for staff, not legal advice. Sunway's own policies and Facilities Management procedures come first."}</p>{" "}</section>{" "}<section aria-labelledby="h-help">{" "}<h2 id="h-help" style={{"margin": "0 0 8px", "fontSize": "20px", "fontWeight": "700"}}>{"Still stuck?"}</h2>{" "}<p style={{"margin": "0", "lineHeight": "1.6", "maxWidth": "62ch"}}>{"Ask the "}<a href="#assistant">{"Assistant"}</a>{", or contact the system admin at "}<span style={{"userSelect": "all"}}>{"[ admin email ]"}</span>{"."}</p>{" "}</section>{" "}</main>{" "}<footer style={{"marginTop": "auto", "padding": "18px 32px 26px", "display": "flex", "flexWrap": "wrap", "justifyContent": "space-between", "gap": "8px 20px", "fontSize": "12px", "color": "var(--c6E6E73)", "borderTop": "1px solid rgba(0,0,0,.08)"}}><span>{"© 2026 Campus Inspection Robot · IT Project, Sunway College"}</span><nav aria-label="Legal" style={{"display": "flex", "flexWrap": "wrap", "gap": "16px"}}><a href="#legal/privacy" style={{"color": "var(--c3A3A3C)"}}>{"Privacy Notice"}</a><a href="#legal/terms" style={{"color": "var(--c3A3A3C)"}}>{"Terms of Use"}</a><a href="#legal/camera" style={{"color": "var(--c3A3A3C)"}}>{"Camera and Image Policy"}</a><a href="#legal/accessibility" style={{"color": "var(--c3A3A3C)"}}>{"Accessibility"}</a></nav></footer>{" "}</div>{" "}</div>
-</div>);
+  const { t } = useDashboardLocale();
+  const [query, setQuery] = React.useState('');
+  const [open, setOpen] = React.useState({ 'Water leak or stain': true });
+  const [closedResults, setClosedResults] = React.useState({});
+  const searchInput = React.useRef(null);
+  const terms = query.trim().toLowerCase().split(/\s+/).filter(Boolean);
+  const searching = terms.length > 0;
+  const matches = (...fields) => {
+    const text = fields.filter(Boolean).flatMap(field => [field, t(field)]).join(' ').toLowerCase();
+    return terms.every(term => text.includes(term));
+  };
+
+  const visibleSections = sections.flatMap(section => {
+    if (!section.topics) return matches(section.title, section.label, ...(section.steps || []), ...(section.references?.flat() || []), section.note) ? [section] : [];
+    const topics = section.topics.filter(topic => matches(section.title, section.label, section.description, topic.title, ...topic.steps, topic.note));
+    return topics.length ? [{ ...section, topics }] : [];
+  });
+  const count = visibleSections.reduce((total, section) => total + (section.topics?.length ?? 1), 0);
+
+  function updateQuery(value) {
+    setQuery(value);
+    setClosedResults({});
+  }
+
+  function clearSearch() {
+    updateQuery('');
+    searchInput.current?.focus();
+  }
+
+  function jump(id) {
+    const heading = document.getElementById('guide-' + id);
+    heading?.focus({ preventScroll: true });
+    heading?.scrollIntoView({ block: 'start', behavior: prefersReducedMotion() ? 'instant' : 'smooth' });
+  }
+
+  function toggleTopic(title) {
+    if (searching) setClosedResults(current => ({ ...current, [title]: !current[title] }));
+    else setOpen(current => ({ ...current, [title]: !current[title] }));
+  }
+
+  return (
+    <DashboardPage title={t("Guidebook")} className="pg-guidebook"
+      description={t("Find the next step for an alert, robot operation, or a privacy question.")}>
+      <section className="card guide-search" aria-label={t("Find guidance")}>
+        <div className="guide-search-row">
+          <label htmlFor="hq">{t("Search the guidebook")}</label>
+          <div className="guide-input">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
+              <circle cx="11" cy="11" r="7" /><path d="m20 20-3.5-3.5" />
+            </svg>
+            <input id="hq" ref={searchInput} type="search" value={query} onChange={event => updateQuery(event.target.value)}
+              placeholder={t("Water leak, PM2.5, stop robot…")} autoComplete="off" />
+          </div>
+          {query && <button className="btn" type="button" onClick={clearSearch}>{t("Clear search")}</button>}
+        </div>
+        {searching ? <p className="muted" role="status">{count ? t(count === 1 ? '{count} matching topic' : '{count} matching topics', { count }) : t('No guidebook topics match.')}</p>
+          : <nav className="workflow-actions" aria-label={t("Guidebook topics")}>
+              {sections.map(section => <button key={section.id} type="button" className="btn" onClick={() => jump(section.id)}>{t(section.label)}</button>)}
+            </nav>}
+      </section>
+      <div className="guide-sections">
+        {visibleSections.map(section => (
+          <section key={section.id} className={'card guide-section' + (section.topics ? ' guide-alerts' : '')} aria-labelledby={'guide-' + section.id}>
+            <header>
+              <h2 id={'guide-' + section.id} tabIndex={-1}>{t(section.title)}</h2>
+              {section.description && <p className="muted">{t(section.description)}</p>}
+            </header>
+            {section.topics ? section.topics.map(topic => (
+              <details key={topic.title} open={searching ? !closedResults[topic.title] : Boolean(open[topic.title])} className="guide-topic">
+                <summary onClick={event => { event.preventDefault(); toggleTopic(topic.title); }}>{t(topic.title)}</summary>
+                <GuideBody entry={topic} ordered t={t} />
+              </details>
+            )) : <GuideBody entry={section} t={t} />}
+          </section>
+        ))}
+      </div>
+      <section className="card guide-help" aria-labelledby="guide-help">
+        <div><h2 id="guide-help">{t("Need more help?")}</h2><p className="muted">{t("Ask the Assistant or find the project’s contact guidance.")}</p></div>
+        <div className="workflow-actions">
+          <a className="btn primary" href="#assistant">{t("Open Assistant")}</a>
+          <a className="btn" href="#legal/contact">{t("Project support")}</a>
+        </div>
+      </section>
+    </DashboardPage>
+  );
 }

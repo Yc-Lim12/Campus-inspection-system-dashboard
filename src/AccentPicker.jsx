@@ -1,4 +1,5 @@
 import React from 'react';
+import { useDashboardLocale } from './dashboardLocale.js';
 
 /* Accent colour preview. Sets data-accent on <html>; refresh.css maps each
    value to the accent tokens. Choice is kept in localStorage ("ci-accent"). */
@@ -19,7 +20,8 @@ export function applyAccent(id) {
   if (id === 'indigo') el.removeAttribute('data-accent'); else el.setAttribute('data-accent', id);
 }
 
-export default function AccentPicker() {
+export default function AccentPicker({ label }) {
+  const { t } = useDashboardLocale();
   const [accent, setAccent] = React.useState(read);
   const pick = (id) => {
     setAccent(id);
@@ -30,15 +32,15 @@ export default function AccentPicker() {
   return (
     <div className="li accent-row">
       <span className="accent-text">
-        <span id="accent-l">Accent colour</span>
-        <small>{current.note}</small>
+        <span id="accent-l">{label || "Accent colour"}</span>
+        {!label && <small>{current.note}</small>}
       </span>
       <fieldset className="accent-swatches" aria-labelledby="accent-l">
         {ACCENTS.map((a) => (
-          <label key={a.id} className="accent-swatch" title={a.name}>
+          <label key={a.id} className="accent-swatch" title={t(a.name)}>
             <input type="radio" name="accent" value={a.id} checked={accent === a.id} onChange={() => pick(a.id)} />
             <i style={{ background: a.hex }} aria-hidden="true" />
-            <span>{a.name}</span>
+            <span>{t(a.name)}</span>
           </label>
         ))}
       </fieldset>

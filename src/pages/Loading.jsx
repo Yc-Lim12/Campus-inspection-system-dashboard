@@ -1,4 +1,5 @@
 import React from 'react';
+import { useDashboardLocale } from '../dashboardLocale.js';
 
 const STEPS = ['Preparing the demo session', 'Loading the robot and floor map', 'Loading recent sample alerts'];
 const STEP_DURATION_MS = 450;
@@ -25,6 +26,7 @@ function Step({ label, complete, active }) {
 }
 
 export default function Loading() {
+  const { t } = useDashboardLocale();
   const [step, setStep] = React.useState(0);
   const ready = step === STEPS.length;
 
@@ -57,22 +59,22 @@ export default function Loading() {
         </div>
 
         <div>
-          <h1>{ready ? 'Dashboard ready' : 'Getting things ready'}</h1>
-          <p className="startup-subtitle" role="status">{ready ? 'Opening Overview' : 'Preparing the Robot 01 demo'}</p>
+          <h1>{t(ready ? 'Dashboard ready' : 'Getting things ready')}</h1>
+          <p className="startup-subtitle" role="status">{t(ready ? 'Opening Overview' : 'Preparing the Robot 01 demo')}</p>
         </div>
 
         <div className="startup-detail">
-          <div className="startup-progress" role="progressbar" aria-label="Demo startup" aria-valuenow={PROGRESS[step]}>
+          <div className="startup-progress" role="progressbar" aria-label={t("Demo startup")} aria-valuenow={PROGRESS[step]}>
             <span style={{ width: PROGRESS[step] + '%' }} />
           </div>
           <ol className="startup-steps">
             {STEPS.map((label, index) => (
-              <Step key={label} label={label} complete={index < step} active={index === step} />
+              <Step key={label} label={t(label)} complete={index < step} active={index === step} />
             ))}
           </ol>
         </div>
 
-        <button className="startup-skip" type="button" onClick={openDashboard}>Skip and open dashboard</button>
+        <button className="startup-skip" type="button" onClick={openDashboard}>{t("Skip and open dashboard")}</button>
       </div>
     </main>
   );

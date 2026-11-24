@@ -1,10 +1,8 @@
 import React from 'react';
 import { createRoot } from 'react-dom/client';
 import App from './App.jsx';
-import { applyDisplayPreferences } from './preferences.js';
 import './pages.css';
 import './theme.css';
 import './console.css';
 import './refresh.css';
-applyDisplayPreferences();
 createRoot(document.getElementById('root')).render(<App />);

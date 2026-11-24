@@ -1,9 +1,12 @@
 # Campus Inspection Dashboard
 
-Open index.html to preview the dashboard. Select a Facility Staff or Administrator demo role and open the dashboard. Email and password fields are optional examples. Use only sample values.
+Open `index.html` to launch the dashboard, or run `php -S 127.0.0.1:8088` from the project directory and visit `http://127.0.0.1:8088/`. Choose Facility Staff or Administrator to open a demo session.
 
-The preview runs with sample data on this device. The selected demo role stays in the current browser tab. The sidebar Settings page has Sign out. Sample changes to incidents are cleared on sign-out and reload. Display preferences are stored locally in the browser.
+- Use Alerts to create, assign and resolve incidents, add notes and request rechecks. Records and Reports reflect incident updates and support CSV export.
+- Overview, Camera, Alerts and Assistant share the robot simulator. Confirm commands to send the robot to a checkpoint or return it to dock. Camera saves simulated request history.
+- The Assistant answers supported questions from dashboard data in English, Bahasa Melayu and Chinese. Chat history stays in the current tab through page reloads and is cleared at sign-out.
+- Administrator can manage checkpoints, limits, a local staff roster, patrol schedules, access rules and photo request retention. Checkpoint access rules affect robot commands and photo requests.
 
-The camera page simulates a request timestamp. Report and record tables can be exported as sample CSV files. Administrator configuration, robot controls and the sample assistant are displayed without service connections.
+Changes to sample data and preferences persist in the browser. Signing out ends the demo session in the current tab. The demo uses sample readings, an illustrated camera view, local roster entries and a rule-based assistant. Live deployment requires the university account service, physical robot and camera interfaces, and any external AI provider.
 
-Run npm ci and node build.mjs to rebuild the files in dist/.
+Run `npm ci` and `node build.mjs` to rebuild the files in `dist/`.

@@ -1,13 +1,15 @@
 import React from 'react';
+import { useDashboardLocale } from '../dashboardLocale.js';
 import { prefersReducedMotion } from '../preferences.js';
 import { DemoCtx } from '../ctx.js';
 import Sidebar from '../Sidebar.jsx';
 import { policySections } from './legalPolicies.js';
+import { chinesePolicies } from './chinesePolicies.js';
 
-function PolicyCopy({ content, onNavigate }) {
+function PolicyCopy({ content, onNavigate, language }) {
   return (
     <div className="policy-copy">
-      <p className="policy-demo-note"><strong>Demo.</strong> {content.demo}</p>
+      <p className="policy-demo-note"><strong>{language === "zh" ? "演示。" : "Demo."}</strong> {content.demo}</p>
       {content.blocks.map(({ title, text, items, link }) => (
         <div className="policy-block" key={title || link[0]}>
           {title && <h3>{title}</h3>}
@@ -62,6 +64,7 @@ function openPolicy(id, shouldAnimate) {
 }
 
 export default function Legal({ section }) {
+  const { language, t } = useDashboardLocale();
   const { role } = React.useContext(DemoCtx);
   const clickedPolicy = React.useRef(null);
   const cancelMotion = React.useRef(null);
@@ -88,25 +91,25 @@ export default function Legal({ section }) {
   return (
     <div className="pg pg-legal">
       <div className="demo-legal-layout">
-        <a className="skip" href="#main">Skip to main content</a>
+        <a className="skip" href="#main">{t("Skip to main content")}</a>
         {role && <Sidebar />}
         <div className="content">
           <main id="main" tabIndex={-1} className="demo-legal-main">
             <header className="policy-header">
               <a className="policy-back" href={role ? "#overview" : "#login"}>
-                <span aria-hidden="true">←</span> {role ? "Back to Overview" : "Back to demo entry"}
+                <span aria-hidden="true">←</span> {t(role ? "Back to Overview" : "Back to demo entry")}
               </a>
-              <h1>Privacy and legal</h1>
-              <p>Privacy, camera use, AI, and robot safety for the demo and proposed campus deployment.</p>
+              <h1>{t("Privacy and legal")}</h1>
+              <p>{t("Privacy, camera use, AI, and robot safety for the demo and proposed campus deployment.")}</p>
             </header>
             <div className="policy-layout">
               <nav aria-labelledby="policy-nav-title" className="demo-policy-nav">
-                <h2 id="policy-nav-title">On this page</h2>
+                <h2 id="policy-nav-title">{t("On this page")}</h2>
                 <ul>
-                  {policySections.map(({ id, title }) => (
+                  {policySections.map(({ id, title, titleMs }) => (
                     <li key={id}>
                       <a href={"#legal/" + id} aria-current={current === id ? "location" : undefined} onClick={(event) => handlePolicyClick(event, id)}>
-                        {title}
+                        {language === "ms" ? titleMs : t(title)}
                       </a>
                     </li>
                   ))}
@@ -115,12 +118,13 @@ export default function Legal({ section }) {
               <div className="policy-sections">
                 {policySections.map(({ id, title, titleMs, en, ms }) => (
                   <section key={id} aria-labelledby={"legal-" + id} className="demo-policy-section">
-                    <h2 id={"legal-" + id} tabIndex={-1}>{title}</h2>
-                    <PolicyCopy content={en} onNavigate={handlePolicyClick} />
-                    <details className="policy-translation" lang="ms">
+                    <h2 id={"legal-" + id} tabIndex={-1}>{language === "ms" ? titleMs : t(title)}</h2>
+                    <PolicyCopy content={language === 'zh' ? chinesePolicies[id] : language === 'ms' ? ms : en}
+                      language={language} onNavigate={handlePolicyClick} />
+                    {language === 'en' && <details className="policy-translation" lang="ms">
                       <summary><span className="policy-language">Bahasa Melayu</span><span>{titleMs}</span></summary>
-                      <PolicyCopy content={ms} onNavigate={handlePolicyClick} />
-                    </details>
+                      <PolicyCopy content={ms} language="ms" onNavigate={handlePolicyClick} />
+                    </details>}
                   </section>
                 ))}
               </div>

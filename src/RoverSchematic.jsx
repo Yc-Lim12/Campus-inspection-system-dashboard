@@ -1,8 +1,10 @@
+import { useDashboardLocale } from './dashboardLocale.js';
 import React from 'react';
 
 export default function RoverSchematic() {
+  const { t } = useDashboardLocale();
   return (
-    <figure className="bot console-rover" role="img" aria-label="Campus Inspection Robot chassis with a tall tapered body, touchscreen, and round wheeled base">
+    <figure className="bot console-rover" role="img" aria-label={t("Campus Inspection Robot chassis with a tall tapered body, touchscreen, and round wheeled base")}>
       <div className="console-rover-grid" aria-hidden="true">
         <svg viewBox="0 0 156 168" fill="none" focusable="false">
           <ellipse cx="78" cy="156" rx="43" ry="7" fill="#111c1c" opacity=".65" />
@@ -45,7 +47,7 @@ export default function RoverSchematic() {
           <path d="M82 112 L86 111.5 V114 L82 114.5Z M91 111 L95 110.5 V113 L91 113.5Z" fill="#273a39" />
         </svg>
       </div>
-      <figcaption aria-hidden="true">Chassis schematic</figcaption>
+      <figcaption aria-hidden="true">{t("Chassis schematic")}</figcaption>
     </figure>
   );
 }
