@@ -73,6 +73,12 @@ export default function Overview() {
   <path d="M150 395 V160 M150 275 H600" fill="none" stroke="#4A7FD4" strokeWidth="3.5" strokeLinecap="round" strokeLinejoin="round"></path><path d="M600 275 H700" fill="none" stroke="#4A7FD4" strokeWidth="3" strokeDasharray="1 7" strokeLinecap="round"></path><path d="M700 275 H778 V420" fill="none" stroke="#9AA6B5" strokeWidth="3" strokeDasharray="1 7" strokeLinecap="round"></path>
 </g>
 <g><rect x="134" y="392" width="32" height="18" rx="4" fill="#FFFFFF" stroke="#B8AE9F"></rect><text x="150" y="405" fontSize="10" fill="#6B5A47" textAnchor="middle">{"Dock"}</text></g><g fontSize="11" fontWeight="700" textAnchor="middle"><circle className="pin incident-pin" cx="150" cy="160" r="13" fill="#D0574F"></circle><circle className="incident-focus-ring" data-checkpoint="cp1" cx="150" cy="160" r="19" /><text x="150" y="164" fill="#FFFFFF">{"1"}</text><circle className="pin incident-pin" cx="407" cy="275" r="13" fill="#DDA03E"></circle><circle className="incident-focus-ring" data-checkpoint="cp2" cx="407" cy="275" r="19" /><text x="407" y="279" fill="#FFFFFF">{"2"}</text><circle className="pin" cx="642" cy="275" r="13" fill="#FFFFFF" stroke="#4A7FD4" strokeWidth="3"></circle><circle cx="642" cy="275" r="0" fill="none" stroke="#4A7FD4" strokeWidth="3"></circle><text x="642" y="279" fill="#4A7FD4">{"3"}</text><circle className="pin" cx="778" cy="420" r="13" fill="#FFFFFF" stroke="#9AA6B5" strokeWidth="3"></circle><circle cx="778" cy="420" r="0" fill="none" stroke="#9AA6B5" strokeWidth="3"></circle><text x="778" y="424" fill="#6E6E73">{"4"}</text></g><g transform="translate(540 275)"><circle r="16" fill="#4A7FD4" fillOpacity=".15"></circle><circle r="10" fill="#4A7FD4" stroke="#FFFFFF" strokeWidth="3"></circle><path d="M-3 -4 L5 0 L-3 4 Z" fill="#FFFFFF"></path></g>
+<g className="map-status-labels" textAnchor="middle" aria-hidden="true">
+  <text x="150" y="190">Hazard</text>
+  <text x="407" y="308">Air alert</text>
+  <text x="642" y="308">Next</text>
+  <text x="778" y="452">Pending</text>
+</g>
 <g id="map-air" className="map-overlay map-air" hidden={!layers.air} aria-hidden="true">
   {CHECKPOINT_AIR.map(({ id, x, y, pm25, aboveThreshold }) => (
     <g key={id} className={aboveThreshold ? "over-limit" : undefined} transform={"translate(" + (x + 10) + " " + (y - 40) + ")"}>

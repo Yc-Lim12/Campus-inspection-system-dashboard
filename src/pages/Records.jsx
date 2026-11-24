@@ -1,4 +1,5 @@
 import React from 'react';
+import { prefersReducedMotion } from '../preferences.js';
 import Sidebar from '../Sidebar.jsx';
 import { exportSampleTables } from '../exportSampleTables.js';
 import { sampleInspectionRecords } from '../inspectionRecords.js';
@@ -85,7 +86,7 @@ export default function Records() {
   function showResults() {
     const panel = resultsPanel.current;
     panel?.focus({ preventScroll: true });
-    const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const reducedMotion = prefersReducedMotion();
     panel?.scrollIntoView({ behavior: reducedMotion ? 'instant' : 'smooth', block: 'start' });
   }
 

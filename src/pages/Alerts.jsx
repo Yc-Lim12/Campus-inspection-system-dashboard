@@ -1,4 +1,5 @@
 import React from 'react';
+import { prefersReducedMotion } from '../preferences.js';
 import { SidebarProfile } from '../Sidebar.jsx';
 import { DEMO_INCIDENT_TRANSITIONS, DemoCtx, SearchCtx } from '../ctx.js';
 
@@ -96,7 +97,7 @@ export default function Alerts() {
     setSelected(alert);
     const detail = panel.current;
     if (detail && detail.getBoundingClientRect().top > button.getBoundingClientRect().bottom) {
-      const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+      const reduceMotion = prefersReducedMotion();
       detail.focus({ preventScroll: true });
       detail.scrollIntoView({ block: 'start', behavior: reduceMotion ? 'auto' : 'smooth' });
     }

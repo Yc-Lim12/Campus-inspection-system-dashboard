@@ -1,4 +1,5 @@
 import React from 'react';
+import { prefersReducedMotion } from '../preferences.js';
 import { DemoCtx } from '../ctx.js';
 import Sidebar from '../Sidebar.jsx';
 import { policySections } from './legalPolicies.js';
@@ -35,7 +36,7 @@ function openPolicy(id, shouldAnimate) {
   const heading = document.getElementById('legal-' + id);
   if (!heading) return;
 
-  const animate = shouldAnimate && !window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const animate = shouldAnimate && !prefersReducedMotion();
   heading.focus({ preventScroll: true });
   heading.scrollIntoView({ block: 'start', behavior: animate ? 'smooth' : 'instant' });
   if (!animate) return;

@@ -1,13 +1,155 @@
 import React from 'react';
-import { SidebarProfile } from '../Sidebar.jsx';
+import Sidebar from '../Sidebar.jsx';
 import AccentPicker from '../AccentPicker.jsx';
-import { DemoCtx, ThemeCtx, SearchCtx } from '../ctx.js';
+import { DemoCtx, ThemeCtx } from '../ctx.js';
+import { readPreferences, updatePreference } from '../preferences.js';
+
+const TEXT_SIZES = [['default', 'Default'], ['large', 'Large'], ['larger', 'Larger']];
+const APPEARANCES = [['light', 'Light'], ['dark', 'Dark'], ['auto', 'Automatic']];
+const ALERT_LEVELS = [['all', 'All alerts'], ['high', 'High only']];
+
+function Options({ id, label, options, value, onChange }) {
+  return (
+    <div className="li">
+      <span id={id}>{label}</span>
+      <fieldset className="opts" aria-labelledby={id}>
+        {options.map(([key, title]) => (
+          <label key={key}>
+            <input type="radio" name={id} value={key} checked={value === key} onChange={() => onChange(key)} />
+            <span>{title}</span>
+          </label>
+        ))}
+      </fieldset>
+    </div>
+  );
+}
+
+function Toggle({ label, checked, onChange }) {
+  return (
+    <label className="li">
+      <span>{label}</span>
+      <input className="sw" type="checkbox" role="switch" checked={checked} onChange={event => onChange(event.target.checked)} />
+    </label>
+  );
+}
+
+async function playPreviewTone() {
+  const context = new AudioContext();
+  try {
+    await context.resume();
+    const tone = context.createOscillator();
+    const volume = context.createGain();
+    const now = context.currentTime;
+    tone.frequency.value = 660;
+    volume.gain.setValueAtTime(0.12, now);
+    volume.gain.exponentialRampToValueAtTime(0.001, now + 0.2);
+    tone.connect(volume).connect(context.destination);
+    tone.onended = () => { void context.close(); };
+    tone.start(now);
+    tone.stop(now + 0.2);
+  } catch (error) {
+    await context.close();
+    throw error;
+  }
+}
 
 export default function Settings() {
-  const { signOut } = React.useContext(DemoCtx);
-  const { openSearch } = React.useContext(SearchCtx);
+  const { role, signOut } = React.useContext(DemoCtx);
   const { theme, setTheme } = React.useContext(ThemeCtx);
-  return (<div className="pg pg-settings">
-<div style={{"minHeight": "100vh", "margin": "0 auto", "display": "flex", "flexWrap": "wrap"}}>{" "}<a href="#main" className="skip">{"Skip to main content"}</a>{" "}<aside className="side" aria-label="Sidebar">{" "}<div className="brand"><span className="appicon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><rect x="5" y="8" width="14" height="10" rx="3"></rect><path d="M12 8V5"></path><circle cx="12" cy="4" r="1"></circle><circle cx="9.5" cy="13" r="1" fill="#8CC4F0" stroke="#8CC4F0"></circle><circle cx="14.5" cy="13" r="1" fill="#8CC4F0" stroke="#8CC4F0"></circle></svg></span><div><strong>{"Campus Inspection"}</strong><span>{"Sunway Univ · Level 8"}</span></div></div>{" "}<label className="sq"><span className="sr">{"Search everything"}</span><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true"><circle cx="11" cy="11" r="7"></circle><path d="m20 20-3.5-3.5"></path></svg><input id="gq" type="search" placeholder="Search…" onFocus={openSearch} readOnly /><kbd>{"⌘K"}</kbd></label>{" "}<a href="#camera" className="robot"><span className="dot" aria-hidden="true"></span><span><strong>{"Patrolling"}</strong><span>{"CP3 next · Battery 78%"}</span></span></a>{" "}<nav aria-label="Main" className="sn">{" "}<a href="#overview" className="si"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M3 11.5 12 4l9 7.5V20a1 1 0 0 1-1 1h-5v-6h-6v6H4a1 1 0 0 1-1-1z"></path></svg><span>{"Overview"}</span></a>{" "}<a href="#camera" className="si"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><rect x="3" y="6" width="13" height="12" rx="2"></rect><path d="m16 10 5-3v10l-5-3"></path></svg><span>{"Camera"}</span></a>{" "}<a href="#alerts" className="si"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M12 3 2 20h20L12 3Z"></path><path d="M12 10v4"></path><path d="M12 17h.01"></path></svg><span>{"Alerts"}</span><span className="badge" aria-label="2 open">{"2"}</span></a>{" "}<a href="#records" className="si"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><rect x="4" y="3" width="16" height="18" rx="2"></rect><path d="M8 8h8M8 12h8M8 16h5"></path></svg><span>{"Records"}</span></a>{" "}<a href="#reports" className="si"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"></path></svg><span>{"Reports"}</span></a>{" "}<a href="#assistant" className="si"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M4 5h16v11H9l-5 4z"></path><path d="M8 10h8"></path></svg><span>{"Assistant"}</span></a>{" "}<p className="sec">{"Manage"}</p>{" "}<a href="#admin" className="si"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><circle cx="12" cy="8" r="3.5"></circle><path d="M5 20c1-4 4-6 7-6s6 2 7 6"></path></svg><span>{"Admin"}</span></a>{" "}<a href="#settings" className="si on" aria-current="page"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"></circle><path d="M12 2v3M12 19v3M2 12h3M19 12h3M4.9 4.9l2.1 2.1M17 17l2.1 2.1M4.9 19.1 7 17M17 7l2.1-2.1"></path></svg><span>{"Settings"}</span></a>{" "}<a href="#guidebook" className="si"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"></circle><path d="M9.5 9.5a2.5 2.5 0 1 1 3.5 2.3c-.6.3-1 .8-1 1.5v.7"></path><path d="M12 17h.01"></path></svg><span>{"Guidebook"}</span></a>{" "}</nav>{" "}<SidebarProfile />{" "}</aside>{" "}<div className="content">{" "}<main id="main" tabIndex={-1} style={{"padding": "28px 32px 40px", "display": "flex", "flexDirection": "column", "gap": "24px"}}>{" "}<h1 style={{"margin": "0", "fontSize": "34px", "fontWeight": "700", "letterSpacing": "-.025em"}}>{"Settings"}</h1>{" "}<div style={{"display": "grid", "gridTemplateColumns": "repeat(2, minmax(0, 1fr))", "gap": "24px 20px", "alignItems": "start"}}>{" "}<div>{" "}<h2 className="h" id="a11y">{"Display and accessibility"}</h2>{" "}<section className="card" aria-labelledby="a11y">{" "}<div className="li"><span id="ts">{"Text size"}</span>{" "}<fieldset className="opts" aria-labelledby="ts"><label><input disabled type="radio" name="ts" /><span>{"Default"}</span></label><label><input disabled type="radio" name="ts" defaultChecked /><span>{"Large"}</span></label><label><input disabled type="radio" name="ts" /><span>{"Larger"}</span></label></fieldset></div>{" "}<div className="li"><span id="ap">{"Appearance"}</span>{" "}<fieldset className="opts" aria-labelledby="ap"><label><input type="radio" name="ap" value="light" checked={theme === "light"} onChange={() => setTheme("light")} /><span>{"Light"}</span></label><label><input type="radio" name="ap" value="dark" checked={theme === "dark"} onChange={() => setTheme("dark")} /><span>{"Dark"}</span></label><label><input type="radio" name="ap" value="auto" checked={theme === "auto"} onChange={() => setTheme("auto")} /><span>{"Automatic"}</span></label></fieldset></div>{" "}<AccentPicker />{" "}<label className="li"><span>{"Increase contrast"}</span><input disabled className="sw" type="checkbox" role="switch" /></label>{" "}<label className="li"><span>{"Reduce motion"}</span><input disabled className="sw" type="checkbox" role="switch" /></label>{" "}<label className="li"><span>{"Show text labels on all status colours"}</span><input disabled className="sw" type="checkbox" role="switch" defaultChecked /></label>{" "}<label className="li"><span>{"Announce new alerts to screen readers"}</span><input disabled className="sw" type="checkbox" role="switch" defaultChecked /></label>{" "}</section>{" "}</div>{" "}<div style={{"display": "flex", "flexDirection": "column", "gap": "24px"}}>{" "}<div>{" "}<p className="demo-feature-note">Theme and accent color are available. Other settings are display examples.</p><h2 className="h" id="lang">{"Language"}</h2>{" "}<section className="card" aria-labelledby="lang">{" "}<label className="li"><span>{"Dashboard language"}</span><select disabled><option>{"English"}</option><option lang="ms">{"Bahasa Melayu"}</option><option lang="zh">{"中文"}</option></select></label>{" "}<label className="li"><span>{"AI assistant replies in"}</span><select disabled><option>{"Same as my question"}</option><option>{"English"}</option><option lang="ms">{"Bahasa Melayu"}</option><option lang="zh">{"中文"}</option></select></label>{" "}</section>{" "}</div>{" "}<div>{" "}<h2 className="h" id="notif">{"Notifications"}</h2>{" "}<section className="card" aria-labelledby="notif">{" "}<label className="li"><span>{"Play a sound for new alerts"}</span><input disabled className="sw" type="checkbox" role="switch" defaultChecked /></label>{" "}<div className="li"><span id="lvl">{"Notify me about"}</span>{" "}<fieldset className="opts" aria-labelledby="lvl"><label><input disabled type="radio" name="lvl" defaultChecked /><span>{"All alerts"}</span></label><label><input disabled type="radio" name="lvl" /><span>{"High only"}</span></label></fieldset></div>{" "}</section>{" "}</div>{" "}<div>{" "}<h2 className="h" id="acct">{"Account"}</h2>{" "}<section className="card" aria-labelledby="acct">{" "}<div className="li"><span>{"[ Staff name ]"}</span><span className="muted">{"Facility staff"}</span></div>{" "}<a className="li" href="#legal" style={{"textDecoration": "none", "color": "inherit"}}><span>{"Privacy, terms and policies"}</span><span aria-hidden="true" style={{"color": "var(--c6E6E73)"}}>{"›"}</span></a>{" "}<div className="li"><span className="muted">{"Demo access uses a sample role. No Sunway account is connected."}</span><button className="btn" type="button" onClick={signOut}>{"Sign out"}</button></div>{" "}</section>{" "}</div>{" "}</div>{" "}</div>{" "}</main>{" "}<footer style={{"marginTop": "auto", "padding": "18px 32px 26px", "display": "flex", "flexWrap": "wrap", "justifyContent": "space-between", "gap": "8px 20px", "fontSize": "12px", "color": "var(--c6E6E73)", "borderTop": "1px solid rgba(0,0,0,.08)"}}><span>{"© 2026 Campus Inspection Robot · IT Project, Sunway College"}</span><nav aria-label="Legal" style={{"display": "flex", "flexWrap": "wrap", "gap": "16px"}}><a href="#legal/privacy" style={{"color": "var(--c3A3A3C)"}}>{"Privacy Notice"}</a><a href="#legal/terms" style={{"color": "var(--c3A3A3C)"}}>{"Terms of Use"}</a><a href="#legal/camera" style={{"color": "var(--c3A3A3C)"}}>{"Camera and Image Policy"}</a><a href="#legal/accessibility" style={{"color": "var(--c3A3A3C)"}}>{"Accessibility"}</a></nav></footer>{" "}</div>{" "}</div>
-</div>);
+  const [settings, setSettings] = React.useState(readPreferences);
+  const [preview, setPreview] = React.useState('');
+  const roleLabel = role === 'admin' ? 'Administrator' : 'Facility staff';
+
+  function setOption(key, value) {
+    setSettings(updatePreference(key, value));
+    setPreview('');
+  }
+
+  async function previewAlert(severity) {
+    const label = severity === 'high' ? 'High' : 'Medium';
+    if (settings.alertLevel === 'high' && severity !== 'high') {
+      setPreview('Medium alert filtered out by High only.');
+      return;
+    }
+
+    const message = label + ' alert preview shown.';
+    setPreview(message);
+    if (settings.alertSound) {
+      try {
+        await playPreviewTone();
+      } catch {
+        setPreview(message + ' Audio is unavailable in this browser.');
+      }
+    }
+  }
+
+  return (
+    <div className="pg pg-settings">
+      <div className="settings-shell">
+        <a className="skip" href="#main">Skip to main content</a>
+        <Sidebar />
+        <div className="content">
+          <main id="main" tabIndex={-1} className="settings-main">
+            <h1>Settings</h1>
+            <div className="settings-columns">
+              <div>
+                <h2 className="h" id="a11y">Display and accessibility</h2>
+                <section className="card" aria-labelledby="a11y">
+                  <Options id="text-size" label="Text size" options={TEXT_SIZES} value={settings.textSize} onChange={value => setOption('textSize', value)} />
+                  <Options id="appearance" label="Appearance" options={APPEARANCES} value={theme} onChange={setTheme} />
+                  <AccentPicker />
+                  <Toggle label="Increase contrast" checked={settings.contrast} onChange={value => setOption('contrast', value)} />
+                  <Toggle label="Reduce motion" checked={settings.reduceMotion} onChange={value => setOption('reduceMotion', value)} />
+                  <Toggle label="Show checkpoint status labels on map" checked={settings.mapLabels} onChange={value => setOption('mapLabels', value)} />
+                  <Toggle label="Announce alert previews to screen readers" checked={settings.announceAlerts} onChange={value => setOption('announceAlerts', value)} />
+                </section>
+              </div>
+              <div className="settings-stack">
+                <div>
+                  <p id="language-demo" className="demo-feature-note">Language choices are saved for this demo. The dashboard and sample replies keep their existing languages.</p>
+                  <h2 className="h" id="lang">Language</h2>
+                  <section className="card" aria-labelledby="lang">
+                    <label className="li"><span>Dashboard language</span><select value={settings.dashboardLanguage || "en"} onChange={event => setOption("dashboardLanguage", event.target.value)} aria-describedby="language-demo"><option value="en">English</option><option value="ms" lang="ms">Bahasa Melayu</option><option value="zh" lang="zh">中文</option></select></label>
+                    <label className="li"><span>AI assistant replies in</span><select value={settings.replyLanguage || "auto"} onChange={event => setOption("replyLanguage", event.target.value)} aria-describedby="language-demo"><option value="auto">Same as my question</option><option value="en">English</option><option value="ms" lang="ms">Bahasa Melayu</option><option value="zh" lang="zh">中文</option></select></label>
+                  </section>
+                </div>
+                <div>
+                  <h2 className="h" id="notif">Notification preview</h2>
+                  <section className="card" aria-labelledby="notif">
+                    <Toggle label="Play a sound for alert previews" checked={settings.alertSound} onChange={value => setOption('alertSound', value)} />
+                    <Options id="alert-level" label="Notify me about" options={ALERT_LEVELS} value={settings.alertLevel} onChange={value => setOption('alertLevel', value)} />
+                    <div className="li settings-alert-preview">
+                      <div className="settings-preview-actions">
+                        <button className="btn" type="button" onClick={() => previewAlert('high')}>Preview high alert</button>
+                        <button className="btn" type="button" onClick={() => previewAlert('medium')}>Preview medium alert</button>
+                      </div>
+                      {preview && <p className="muted" aria-hidden={settings.announceAlerts || undefined}>{preview}</p>}
+                      <span className="sr" role="status">{settings.announceAlerts ? preview : ''}</span>
+                    </div>
+                  </section>
+                </div>
+                <div>
+                  <h2 className="h" id="acct">Account</h2>
+                  <section className="card" aria-labelledby="acct">
+                    <div className="li"><span>Demo session</span><span className="muted">{roleLabel}</span></div>
+                    <a className="li settings-policy-link" href="#legal">Privacy, terms and policies <span aria-hidden="true">›</span></a>
+                    <div className="li"><span className="muted">No Sunway account is connected.</span><button className="btn" type="button" onClick={signOut}>Sign out</button></div>
+                  </section>
+                </div>
+              </div>
+            </div>
+          </main>
+          <footer className="settings-footer">
+            <span>© 2026 Campus Inspection Robot · IT Project, Sunway College</span>
+            <nav aria-label="Legal">
+              <a href="#legal/privacy">Privacy Notice</a>
+              <a href="#legal/terms">Terms of Use</a>
+              <a href="#legal/camera">Camera and Image Policy</a>
+              <a href="#legal/accessibility">Accessibility</a>
+            </nav>
+          </footer>
+        </div>
+      </div>
+    </div>
+  );
 }

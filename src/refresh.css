@@ -1297,3 +1297,50 @@ html:not([data-demo-role="admin"]) .side a[href="#admin"] { display: none; }
 .demo-incident-actions p { flex-basis:100%; }
 .pg button:disabled, .pg input:disabled, .pg select:disabled { opacity:.62; cursor:not-allowed; }
 
+
+/* Personal display preferences */
+html[data-text-size="large"] #root { zoom: 1.1; }
+html[data-text-size="larger"] #root { zoom: 1.2; }
+
+:root:root:root[data-high-contrast] {
+  --ink: light-dark(#090a0c, #ffffff);
+  --muted-ink: light-dark(#34353b, #dedfe2);
+  --soft-ink: light-dark(#42434a, #d5d6da);
+  --line: light-dark(#9c9ea6, #858790);
+  --line-strong: light-dark(#70727c, #a6a8b1);
+}
+
+html[data-reduce-motion] #root *,
+html[data-reduce-motion] #root *::before,
+html[data-reduce-motion] #root *::after {
+  animation-duration: .01ms !important;
+  animation-iteration-count: 1 !important;
+  transition-duration: .01ms !important;
+  scroll-behavior: auto !important;
+}
+
+html[data-hide-map-labels] .map-status-labels { display: none; }
+.map-status-labels {
+  fill: var(--map-label);
+  font-size: 13px;
+  font-weight: 700;
+  paint-order: stroke;
+  stroke: var(--map-bg);
+  stroke-width: 4px;
+}
+
+.settings-shell { min-height: 100vh; display: flex; flex-wrap: wrap; margin-inline: auto; }
+.settings-main { padding: 22px clamp(16px, 3vw, 32px) 32px; }
+.settings-main h1 { margin: 0 0 24px; font-size: 32px; }
+.settings-columns { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 355px), 1fr)); gap: 20px; align-items: start; }
+.settings-stack { display: flex; flex-direction: column; gap: 24px; }
+.pg-settings .settings-main .li { flex-wrap: wrap; gap: 10px; }
+.pg-settings .settings-main .opts { flex-wrap: wrap; }
+.pg-settings .settings-main .accent-swatches { min-inline-size: 0; max-inline-size: 100%; flex-wrap: wrap; }
+:root:root:root .pg-settings .opts input[type="radio"] { opacity: 0 !important; }
+.settings-footer { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 8px 20px; margin-top: auto; padding: 18px clamp(16px, 3vw, 32px) 26px; border-top: 1px solid var(--line); color: var(--muted-ink); font-size: 12px; }
+.settings-footer nav, .settings-preview-actions { display: flex; flex-wrap: wrap; gap: 8px 16px; }
+.pg-settings .settings-alert-preview { display: grid; padding-block: 12px; }
+.settings-alert-preview p { margin: 0; }
+.settings-policy-link { color: inherit !important; text-decoration: none; }
+.settings-policy-link:hover { text-decoration: underline; }
