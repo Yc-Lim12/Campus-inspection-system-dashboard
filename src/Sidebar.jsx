@@ -1,12 +1,14 @@
 import React from 'react';
-import { RouteCtx, SearchCtx } from './ctx.js';
+import { DemoCtx, RouteCtx, SearchCtx } from './ctx.js';
 
 export function SidebarProfile() {
+  const { role } = React.useContext(DemoCtx);
+  const admin = role === 'admin';
   return (
     <div className="sidebar-profile">
-      <span className="sidebar-profile-initials" aria-hidden="true">FS</span>
+      <span className="sidebar-profile-initials" aria-hidden="true">{admin ? 'AD' : 'FS'}</span>
       <div className="sidebar-profile-label">
-        <strong>Facility staff</strong>
+        <strong>{admin ? 'Administrator' : 'Facility staff'}</strong>
         <span>Demo session</span>
       </div>
     </div>

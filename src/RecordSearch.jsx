@@ -1,15 +1,10 @@
 import React from 'react';
 
-/* Airbnb-style segmented search for the Records table.
-   Filters the rendered table rows live; the round button applies and
-   moves focus to the results. */
+import { CHECKPOINT_ROOMS } from './inspectionRecords.js';
 
 const CHECKPOINTS = [
   ['', 'Any checkpoint'],
-  ['CP1', 'CP1 · UW-8-5'],
-  ['CP2', 'CP2 · UC-8-8'],
-  ['CP3', 'CP3 · UC-8-10'],
-  ['CP4', 'CP4 · UC-8-11'],
+  ...Object.entries(CHECKPOINT_ROOMS).map(([id, room]) => [id, id + ' · ' + room]),
 ];
 const HAZARDS = [
   ['', 'Any hazard'],
@@ -18,63 +13,25 @@ const HAZARDS = [
   ['Wall crack', 'Wall crack'],
   ['Floor obstruction', 'Floor obstruction'],
 ];
-const MONTHS = { Jan: 0, Feb: 1, Mar: 2, Apr: 3, May: 4, Jun: 5, Jul: 6, Aug: 7, Sep: 8, Oct: 9, Nov: 10, Dec: 11 };
-const YEAR = 2026;
-
-// "20 Nov, 10:31" -> "2026-11-20" so it compares with <input type="date"> values.
-function rowDay(text) {
-  const m = /^(\d{1,2}) (\w{3})/.exec(text.trim());
-  if (!m || !(m[2] in MONTHS)) return '';
-  return `${YEAR}-${String(MONTHS[m[2]] + 1).padStart(2, '0')}-${m[1].padStart(2, '0')}`;
-}
-
 const label = (pairs, v) => (pairs.find(([k]) => k === v) || pairs[0])[1];
 
-export default function RecordSearch() {
-  const [q, setQ] = React.useState('');
-  const [cp, setCp] = React.useState('');
-  const [from, setFrom] = React.useState('');
-  const [to, setTo] = React.useState('');
-  const [hz, setHz] = React.useState('');
-  const [counts, setCounts] = React.useState(null);
-  const root = React.useRef(null);
+export default function RecordSearch({ filters, onChange, onClear, onSearch, resultCount }) {
+  const { q, cp, from, to, hz } = filters;
   const textInput = React.useRef(null);
-
   const active = Boolean(q.trim() || cp || from || to || hz);
 
-  React.useEffect(() => {
-    const table = root.current?.closest('main')?.querySelector('table');
-    const rows = table ? [...table.tBodies[0].rows] : [];
-    const needle = q.trim().toLowerCase();
-    let shown = 0;
-    rows.forEach((tr) => {
-      const c = tr.cells;
-      const day = rowDay(c[2]?.textContent || '');
-      const ok =
-        (!needle || tr.textContent.toLowerCase().includes(needle)) &&
-        (!cp || (c[3]?.textContent || '').startsWith(cp)) &&
-        (!hz || (c[4]?.textContent || '').trim() === hz) &&
-        (!from || (day && day >= from)) &&
-        (!to || (day && day <= to));
-      tr.hidden = !ok;
-      if (ok) shown += 1;
-    });
-    setCounts({ shown, total: rows.length });
-  }, [q, cp, from, to, hz]);
-
-  const clear = () => {
-    setQ(''); setCp(''); setFrom(''); setTo(''); setHz('');
+  function clear() {
+    onClear();
     textInput.current?.focus();
-  };
+  }
 
-  const submit = (e) => {
-    e.preventDefault();
-    const table = root.current?.closest('main')?.querySelector('table');
-    table?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-  };
+  function submit(event) {
+    event.preventDefault();
+    onSearch();
+  }
 
   return (
-    <div className="rsx" ref={root}>
+    <div className="rsx">
       <form className="rsx-bar" role="search" aria-label="Search records" onSubmit={submit}>
         <label className="rsx-seg rsx-what">
           <span className="rsx-k">What</span>
@@ -82,7 +39,7 @@ export default function RecordSearch() {
             ref={textInput}
             type="search"
             value={q}
-            onChange={(e) => setQ(e.target.value)}
+            onChange={event => onChange('q', event.target.value)}
             placeholder="Record ID, incident or room"
             autoComplete="off"
           />
@@ -90,22 +47,22 @@ export default function RecordSearch() {
         <label className="rsx-seg">
           <span className="rsx-k">Checkpoint</span>
           <span className={'rsx-v' + (cp ? '' : ' empty')}>{label(CHECKPOINTS, cp)}</span>
-          <select value={cp} onChange={(e) => setCp(e.target.value)}>
+          <select value={cp} onChange={event => onChange('cp', event.target.value)}>
             {CHECKPOINTS.map(([k, l]) => <option key={l} value={k}>{l}</option>)}
           </select>
         </label>
         <label className={'rsx-seg rsx-date' + (from ? '' : ' empty')}>
           <span className="rsx-k">From</span>
-          <input type="date" value={from} max={to || undefined} onChange={(e) => setFrom(e.target.value)} />
+          <input type="date" value={from} max={to || undefined} onChange={event => onChange('from', event.target.value)} />
         </label>
         <label className={'rsx-seg rsx-date' + (to ? '' : ' empty')}>
           <span className="rsx-k">To</span>
-          <input type="date" value={to} min={from || undefined} onChange={(e) => setTo(e.target.value)} />
+          <input type="date" value={to} min={from || undefined} onChange={event => onChange('to', event.target.value)} />
         </label>
         <label className="rsx-seg rsx-last">
           <span className="rsx-k">Hazard</span>
           <span className={'rsx-v' + (hz ? '' : ' empty')}>{label(HAZARDS, hz)}</span>
-          <select value={hz} onChange={(e) => setHz(e.target.value)}>
+          <select value={hz} onChange={event => onChange('hz', event.target.value)}>
             {HAZARDS.map(([k, l]) => <option key={l} value={k}>{l}</option>)}
           </select>
         </label>
@@ -116,12 +73,12 @@ export default function RecordSearch() {
           <span>Search</span>
         </button>
       </form>
-      <p className="rsx-status" aria-live="polite">
-        {active && counts && (
+      <p className="rsx-status">
+        {active && (
           <>
             <span>
-              {counts.shown
-                ? <>Showing <b>{counts.shown}</b> of {counts.total} records on this page</>
+              {resultCount
+                ? <><b>{resultCount}</b> matching sample records</>
                 : 'No records match these filters'}
             </span>
             <button type="button" className="rsx-clear" onClick={clear}>Clear all</button>

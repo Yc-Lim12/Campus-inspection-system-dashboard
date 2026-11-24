@@ -2,11 +2,11 @@ import React from 'react';
 import RoverSchematic from '../RoverSchematic.jsx';
 
 export default function Login({ onEnter }) {
-  const [showPassword, setShowPassword] = React.useState(false);
+  const [role, setRole] = React.useState('staff');
 
   function submitDemo(event) {
     event.preventDefault();
-    onEnter();
+    onEnter(role);
   }
 
   return (
@@ -19,46 +19,26 @@ export default function Login({ onEnter }) {
           </div>
           <RoverSchematic />
         </div>
-
         <section className="login-content" aria-labelledby="login-heading">
-          <h1 id="login-heading">Log in</h1>
-          <p className="login-intro">Email and password are optional in this demo.</p>
-
-          <form className="login-form" onSubmit={submitDemo} noValidate>
-            <label className="field" htmlFor="login-email">
-              Sunway email
-              <input id="login-email" type="email" autoComplete="off" placeholder="name@sunway.edu.my" />
-            </label>
-
-            <div className="field">
-              <label htmlFor="login-password">Password</label>
-              <div className="login-password">
-                <input
-                  id="login-password"
-                  type={showPassword ? 'text' : 'password'}
-                  autoComplete="new-password"
-                  placeholder="Enter a sample password"
-                />
-                <button
-                  type="button"
-                  aria-controls="login-password"
-                  aria-label={showPassword ? 'Hide password' : 'Show password'}
-                  onClick={() => setShowPassword((shown) => !shown)}
-                >
-                  {showPassword ? 'Hide' : 'Show'}
-                </button>
-              </div>
-            </div>
-
+          <h1 id="login-heading">Open demo</h1>
+          <p className="login-intro">Choose a sample role to preview the dashboard.</p>
+          <form className="login-form" onSubmit={submitDemo} autoComplete="off" aria-describedby="demo-login-note">
+            <p id="demo-login-note" className="login-intro">Email and password are optional demo fields. Use sample values only.</p>
+            <label className="demo-login-field">Email<input type="text" inputMode="email" autoComplete="off" placeholder="name@example.com" /></label>
+            <label className="demo-login-field">Password<input type="password" autoComplete="new-password" placeholder="Optional" /></label>
+            <fieldset className="demo-role-picker">
+              <legend>Demo role</legend>
+              <label><input type="radio" name="demo-role" value="staff" checked={role === 'staff'} onChange={() => setRole('staff')} /> Facility staff</label>
+              <label><input type="radio" name="demo-role" value="admin" checked={role === 'admin'} onChange={() => setRole('admin')} /> Administrator</label>
+            </fieldset>
             <button type="submit" className="btn login-submit">
-              Log in
+              Open dashboard
               <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                <path d="M5 12h14m-6-6 6 6-6 6" />
+                <path d="M4 12h14m-6-6 6 6-6 6" />
               </svg>
             </button>
           </form>
-
-          <p className="login-policies"><a href="#legal">Terms of Use</a><a href="#legal">Privacy Notice</a></p>
+          <p className="login-policies"><a href="#legal/terms">Terms of Use</a><a href="#legal/privacy">Privacy Notice</a></p>
         </section>
       </div>
     </main>

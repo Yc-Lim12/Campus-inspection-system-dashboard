@@ -1,4 +1,5 @@
 import React from 'react';
+import { DemoCtx } from './ctx.js';
 import { SEARCH } from './data.js';
 const FILTERS = [['', 'All'], ['Incident', 'Incidents'], ['Checkpoint', 'Checkpoints'], ['Record', 'Records'], ['Page', 'Pages']];
 function Hl({ s, v }) {
@@ -6,11 +7,12 @@ function Hl({ s, v }) {
   return <>{s.slice(0, i)}<mark>{s.slice(i, i + v.length)}</mark>{s.slice(i + v.length)}</>;
 }
 export default function Palette({ open, onClose }) {
+  const { role } = React.useContext(DemoCtx);
   const [q, setQ] = React.useState(''); const [flt, setFlt] = React.useState(''); const [act, setAct] = React.useState(0);
   const input = React.useRef(null); const list = React.useRef(null);
   React.useEffect(() => { if (open) { setQ(''); setAct(0); setTimeout(() => input.current?.focus(), 10); } }, [open]);
   const v = q.trim().toLowerCase();
-  const rows = SEARCH.filter((d) => (!flt || d.t === flt) && (!v || `${d.n} ${d.s} ${d.t}`.toLowerCase().includes(v)));
+  const rows = SEARCH.filter((d) => (role === 'admin' || d.h !== 'admin') && (!flt || d.t === flt) && (!v || `${d.n} ${d.s} ${d.t}`.toLowerCase().includes(v)));
   React.useEffect(() => { list.current?.querySelector('a.act')?.scrollIntoView({ block: 'nearest' }); }, [act]);
   if (!open) return null;
   const go = (d) => { location.hash = '#' + d.h; onClose(); };

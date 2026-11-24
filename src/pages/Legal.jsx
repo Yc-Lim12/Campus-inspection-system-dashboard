@@ -1,11 +1,132 @@
 import React from 'react';
-import { SidebarProfile } from '../Sidebar.jsx';
-import { ThemeCtx, SearchCtx } from '../ctx.js';
+import { DemoCtx } from '../ctx.js';
+import Sidebar from '../Sidebar.jsx';
+import { policySections } from './legalPolicies.js';
 
-export default function Legal() {
-  const { openSearch } = React.useContext(SearchCtx);
-  
-  return (<div className="pg pg-legal">
-<div style={{"maxWidth": "1280px", "minHeight": "1500px", "margin": "0 auto", "display": "flex", "flexWrap": "wrap"}}>{" "}<a href="#main" className="skip">{"Skip to main content"}</a>{" "}<aside className="side" aria-label="Sidebar">{" "}<div className="brand"><span className="appicon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><rect x="5" y="8" width="14" height="10" rx="3"></rect><path d="M12 8V5"></path><circle cx="12" cy="4" r="1"></circle><circle cx="9.5" cy="13" r="1" fill="#8CC4F0" stroke="#8CC4F0"></circle><circle cx="14.5" cy="13" r="1" fill="#8CC4F0" stroke="#8CC4F0"></circle></svg></span><div><strong>{"Campus Inspection"}</strong><span>{"Sunway Univ · Level 8"}</span></div></div>{" "}<label className="sq"><span className="sr">{"Search everything"}</span><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true"><circle cx="11" cy="11" r="7"></circle><path d="m20 20-3.5-3.5"></path></svg><input id="gq" type="search" placeholder="Search…" onFocus={openSearch} readOnly /><kbd>{"⌘K"}</kbd></label>{" "}<a href="#camera" className="robot"><span className="dot" aria-hidden="true"></span><span><strong>{"Patrolling"}</strong><span>{"CP3 next · Battery 78%"}</span></span></a>{" "}<nav aria-label="Main" className="sn">{" "}<a href="#overview" className="si"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M3 11.5 12 4l9 7.5V20a1 1 0 0 1-1 1h-5v-6h-6v6H4a1 1 0 0 1-1-1z"></path></svg><span>{"Overview"}</span></a>{" "}<a href="#camera" className="si"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><rect x="3" y="6" width="13" height="12" rx="2"></rect><path d="m16 10 5-3v10l-5-3"></path></svg><span>{"Camera"}</span></a>{" "}<a href="#alerts" className="si"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M12 3 2 20h20L12 3Z"></path><path d="M12 10v4"></path><path d="M12 17h.01"></path></svg><span>{"Alerts"}</span><span className="badge" aria-label="2 open">{"2"}</span></a>{" "}<a href="#records" className="si"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><rect x="4" y="3" width="16" height="18" rx="2"></rect><path d="M8 8h8M8 12h8M8 16h5"></path></svg><span>{"Records"}</span></a>{" "}<a href="#reports" className="si"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"></path></svg><span>{"Reports"}</span></a>{" "}<a href="#assistant" className="si"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M4 5h16v11H9l-5 4z"></path><path d="M8 10h8"></path></svg><span>{"Assistant"}</span></a>{" "}<p className="sec">{"Manage"}</p>{" "}<a href="#admin" className="si"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><circle cx="12" cy="8" r="3.5"></circle><path d="M5 20c1-4 4-6 7-6s6 2 7 6"></path></svg><span>{"Admin"}</span></a>{" "}<a href="#settings" className="si"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"></circle><path d="M12 2v3M12 19v3M2 12h3M19 12h3M4.9 4.9l2.1 2.1M17 17l2.1 2.1M4.9 19.1 7 17M17 7l2.1-2.1"></path></svg><span>{"Settings"}</span></a>{" "}<a href="#guidebook" className="si"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"></circle><path d="M9.5 9.5a2.5 2.5 0 1 1 3.5 2.3c-.6.3-1 .8-1 1.5v.7"></path><path d="M12 17h.01"></path></svg><span>{"Guidebook"}</span></a>{" "}</nav>{" "}<SidebarProfile />{" "}</aside>{" "}<div className="content">{" "}<main id="main" style={{"padding": "28px 32px 48px", "display": "flex", "flexWrap": "wrap", "gap": "28px", "alignItems": "flex-start"}}>{" "}<aside style={{"flex": "1 1 220px", "minWidth": "0"}}>{" "}<h1 style={{"margin": "0 0 4px 12px", "fontSize": "34px", "fontWeight": "700", "letterSpacing": "-.025em"}}>{"Privacy and legal"}</h1>{" "}<p className="muted" style={{"margin": "0 0 16px 12px"}}>{"Last updated: [ date ]"}</p>{" "}<nav className="toc" aria-label="On this page">{" "}<a href="#privacy">{"Privacy Notice"}</a>{" "}<a href="#camera">{"Camera and Image Policy"}</a>{" "}<a href="#ai">{"AI Assistant Notice"}</a>{" "}<a href="#terms">{"Terms of Use"}</a>{" "}<a href="#safety">{"Robot Safety"}</a>{" "}<a href="#accessibility">{"Accessibility Statement"}</a>{" "}<a href="#contact">{"Contact"}</a>{" "}</nav>{" "}</aside>{" "}<article className="doc" style={{"flex": "999 1 560px", "minWidth": "0"}}>{" "}<p className="note">{"Prototype text for an IT Project at Sunway College. It must be reviewed and approved by Sunway College and its Facility Management department before the system is used on campus."}</p>{" "}<h2 id="privacy">{"Privacy Notice"}</h2>{" "}<p>{"This notice explains how the Campus Inspection Robot System handles personal data, in line with Malaysia's Personal Data Protection Act 2010 (PDPA)."}</p>{" "}<h3>{"What we collect"}</h3>{" "}<ul><li><strong>{"Account details:"}</strong>{" your name, Sunway email address and role (facility staff or administrator)."}</li><li><strong>{"Activity records:"}</strong>{" when you sign in, which alerts you acknowledge and which robot commands you confirm."}</li><li><strong>{"Inspection data:"}</strong>{" checkpoint photos, sensor readings, times and locations collected by the robot."}</li></ul>{" "}<h3>{"What we do not collect"}</h3>{" "}<p>{"The system does not use face recognition, does not identify or track individuals, and does not record audio."}</p>{" "}<h3>{"Why we use it"}</h3>{" "}<p>{"To detect facility hazards, send alerts to the right staff, produce inspection reports and keep a record of who acted on each alert."}</p>{" "}<h3>{"Who can see it"}</h3>{" "}<p>{"Only signed-in facility management staff and administrators. Data is not sold or shared for marketing. To answer questions, the AI assistant sends inspection records, never personal data, to an external AI service (see AI Assistant Notice)."}</p>{" "}<h3>{"How we protect it"}</h3>{" "}<p>{"Sign-in is required for every session, passwords are stored hashed, access depends on your role, and data is sent over an encrypted connection."}</p>{" "}<h3>{"How long we keep it"}</h3>{" "}<p>{"Inspection records and photos are kept for [ retention period ] and then deleted. Account details are deleted when the account is removed."}</p>{" "}<h3>{"Your rights"}</h3>{" "}<p>{"You can ask to see or correct the personal data held about you by contacting us (see Contact)."}</p>{" "}<h2 id="camera">{"Camera and Image Policy"}</h2>{" "}<ul><li>{"The camera only takes photos when the robot stops at a checkpoint, for hazard detection."}</li><li>{"The camera faces walls, ceilings and floors at each checkpoint, not people."}</li><li>{"If a person appears in a photo by accident, the image is deleted or the face is blurred before it is stored."}</li><li>{"Signed-in staff can ask the robot to take a single photo from its front camera to check on the robot or an area. There is no video stream and no audio. Each request is logged, and these photos are deleted automatically after [ retention period ]."}</li><li>{"The LED status ring shows when the robot is active, so people nearby are aware of it."}</li></ul>{" "}<h2 id="ai">{"AI Assistant Notice"}</h2>{" "}<ul><li>{"Answers are generated by AI from the stored inspection records and may contain mistakes. Check the original record before acting on an answer."}</li><li>{"The assistant can only choose from three commands: start a patrol, go to a checkpoint and return to the start point. Each one runs only after you confirm it."}</li><li>{"Do not type personal or confidential information into the assistant."}</li></ul>{" "}<h2 id="terms">{"Terms of Use"}</h2>{" "}<ul><li>{"The system is for authorised Sunway facility management staff and administrators only."}</li><li>{"Keep your account to yourself. You are responsible for actions taken with it."}</li><li>{"Use the system only for facility inspection and maintenance work."}</li><li>{"The robot supports, and does not replace, manual safety inspections and existing reporting procedures."}</li><li>{"Misuse, such as sharing records outside the department or sending the robot into unsafe areas, may lead to your account being removed."}</li></ul>{" "}<h2 id="safety">{"Robot Safety"}</h2>{" "}<ul><li>{"Only confirm a robot command when the route is clear and safe."}</li><li>{"In an emergency, press the emergency stop button on the robot or the Stop robot button on the dashboard."}</li><li>{"Do not ride on, push or block the robot."}</li></ul>{" "}<h2 id="accessibility">{"Accessibility Statement"}</h2>{" "}<p>{"The dashboard is designed to meet the Web Content Accessibility Guidelines (WCAG) 2.1 Level AA. It can be used with a keyboard and screen readers, supports larger text, reduced motion and increased contrast in Settings, and never uses colour alone to show status. If something is hard to use, please tell us."}</p>{" "}<h2 id="contact">{"Contact"}</h2>{" "}<p>{"For privacy requests or questions about these terms, contact the system administrator at [ email address ] or the Facility Management department, Sunway College."}</p>{" "}</article>{" "}</main>{" "}<footer style={{"marginTop": "auto", "padding": "18px 32px 26px", "display": "flex", "flexWrap": "wrap", "justifyContent": "space-between", "gap": "8px 20px", "fontSize": "12px", "color": "var(--c6E6E73)", "borderTop": "1px solid rgba(0,0,0,.08)"}}><span>{"© 2026 Campus Inspection Robot · IT Project, Sunway College"}</span></footer>{" "}</div>{" "}</div>
-</div>);
+function PolicyCopy({ content, onNavigate }) {
+  return (
+    <div className="policy-copy">
+      <p className="policy-demo-note"><strong>Demo.</strong> {content.demo}</p>
+      {content.blocks.map(({ title, text, items, link }) => (
+        <div className="policy-block" key={title || link[0]}>
+          {title && <h3>{title}</h3>}
+          {text && <p>{text}</p>}
+          {items && (
+            <ul>
+              {items.map(item => Array.isArray(item) ? (
+                <li key={item[0]}><strong>{item[0]}.</strong> {item[1]}</li>
+              ) : <li key={item}>{item}</li>)}
+            </ul>
+          )}
+          {link && (
+            <p className="policy-reference">
+              <a href={link[1]} onClick={link[1].startsWith("#legal/") ? (event) => onNavigate(event, link[1].slice(7)) : undefined}>
+                {link[0]}
+              </a>
+            </p>
+          )}
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function openPolicy(id, shouldAnimate) {
+  const heading = document.getElementById('legal-' + id);
+  if (!heading) return;
+
+  const animate = shouldAnimate && !window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  heading.focus({ preventScroll: true });
+  heading.scrollIntoView({ block: 'start', behavior: animate ? 'smooth' : 'instant' });
+  if (!animate) return;
+
+  let slide;
+  const observer = new IntersectionObserver(([entry]) => {
+    if (!entry.isIntersecting) return;
+    observer.disconnect();
+    window.clearTimeout(timeout);
+    slide = heading.closest('section').animate([
+      { transform: 'translateX(-12px)' },
+      { transform: 'translateX(0)' },
+    ], { duration: 280, easing: 'ease-out' });
+  }, { rootMargin: '0px 0px -25% 0px' });
+  const timeout = window.setTimeout(() => observer.disconnect(), 1000);
+  observer.observe(heading);
+
+  return () => {
+    observer.disconnect();
+    window.clearTimeout(timeout);
+    slide?.cancel();
+  };
+}
+
+export default function Legal({ section }) {
+  const { role } = React.useContext(DemoCtx);
+  const clickedPolicy = React.useRef(null);
+  const cancelMotion = React.useRef(null);
+  const current = policySections.some(({ id }) => id === section) ? section : policySections[0].id;
+
+  React.useEffect(() => {
+    const animate = clickedPolicy.current === section;
+    clickedPolicy.current = null;
+    if (section && section === current) cancelMotion.current = openPolicy(section, animate);
+    return () => cancelMotion.current?.();
+  }, [current, section]);
+
+  function handlePolicyClick(event, id) {
+    if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
+    if (section === id) {
+      event.preventDefault();
+      cancelMotion.current?.();
+      cancelMotion.current = openPolicy(id, true);
+    } else {
+      clickedPolicy.current = id;
+    }
+  }
+
+  return (
+    <div className="pg pg-legal">
+      <div className="demo-legal-layout">
+        <a className="skip" href="#main">Skip to main content</a>
+        {role && <Sidebar />}
+        <div className="content">
+          <main id="main" tabIndex={-1} className="demo-legal-main">
+            <header className="policy-header">
+              <a className="policy-back" href={role ? "#overview" : "#login"}>
+                <span aria-hidden="true">←</span> {role ? "Back to Overview" : "Back to demo entry"}
+              </a>
+              <h1>Privacy and legal</h1>
+              <p>Privacy, camera use, AI, and robot safety for the demo and proposed campus deployment.</p>
+            </header>
+            <div className="policy-layout">
+              <nav aria-labelledby="policy-nav-title" className="demo-policy-nav">
+                <h2 id="policy-nav-title">On this page</h2>
+                <ul>
+                  {policySections.map(({ id, title }) => (
+                    <li key={id}>
+                      <a href={"#legal/" + id} aria-current={current === id ? "location" : undefined} onClick={(event) => handlePolicyClick(event, id)}>
+                        {title}
+                      </a>
+                    </li>
+                  ))}
+                </ul>
+              </nav>
+              <div className="policy-sections">
+                {policySections.map(({ id, title, titleMs, en, ms }) => (
+                  <section key={id} aria-labelledby={"legal-" + id} className="demo-policy-section">
+                    <h2 id={"legal-" + id} tabIndex={-1}>{title}</h2>
+                    <PolicyCopy content={en} onNavigate={handlePolicyClick} />
+                    <details className="policy-translation" lang="ms">
+                      <summary><span className="policy-language">Bahasa Melayu</span><span>{titleMs}</span></summary>
+                      <PolicyCopy content={ms} onNavigate={handlePolicyClick} />
+                    </details>
+                  </section>
+                ))}
+              </div>
+            </div>
+          </main>
+        </div>
+      </div>
+    </div>
+  );
 }

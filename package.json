@@ -10,7 +10,7 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "esbuild": "^0.21.5",
+    "esbuild": "^0.28.2",
     "node-html-parser": "^6.1.13",
     "postcss": "^8.4.38",
     "postcss-prefix-selector": "^1.16.1",
