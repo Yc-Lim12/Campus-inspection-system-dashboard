@@ -33,20 +33,36 @@ function Toggle({ label, checked, onChange }) {
   );
 }
 
-async function playPreviewTone() {
+async function playPreviewTone(severity) {
   const context = new AudioContext();
   try {
     await context.resume();
-    const tone = context.createOscillator();
-    const volume = context.createGain();
-    const now = context.currentTime;
-    tone.frequency.value = 660;
-    volume.gain.setValueAtTime(0.12, now);
-    volume.gain.exponentialRampToValueAtTime(0.001, now + 0.2);
-    tone.connect(volume).connect(context.destination);
-    tone.onended = () => { void context.close(); };
-    tone.start(now);
-    tone.stop(now + 0.2);
+    const high = severity === 'high';
+    const notes = high ? [1040, 1040] : [680, 580];
+    const spacing = high ? 0.31 : 0.27;
+
+    notes.forEach((frequency, index) => {
+      const tone = context.createOscillator();
+      const volume = context.createGain();
+      const start = context.currentTime + (high ? 0.015 : 0) + index * spacing;
+      tone.type = 'triangle';
+      tone.frequency.value = frequency;
+      if (high) {
+        volume.gain.setValueAtTime(0.001, start);
+        volume.gain.linearRampToValueAtTime(0.2, start + 0.008);
+        volume.gain.setValueAtTime(0.2, start + 0.20);
+        volume.gain.exponentialRampToValueAtTime(0.001, start + 0.24);
+      } else {
+        volume.gain.setValueAtTime(0.001, start);
+        volume.gain.linearRampToValueAtTime(0.14, start + 0.012);
+        volume.gain.setValueAtTime(0.14, start + 0.16);
+        volume.gain.exponentialRampToValueAtTime(0.001, start + 0.21);
+      }
+      tone.connect(volume).connect(context.destination);
+      if (index === notes.length - 1) tone.onended = () => { void context.close(); };
+      tone.start(start);
+      tone.stop(start + spacing);
+    });
   } catch (error) {
     await context.close();
     throw error;
@@ -76,7 +92,7 @@ export default function Settings() {
     setPreview(message);
     if (settings.alertSound) {
       try {
-        await playPreviewTone();
+        await playPreviewTone(severity);
       } catch {
         setPreview(message + ' Audio is unavailable in this browser.');
       }
