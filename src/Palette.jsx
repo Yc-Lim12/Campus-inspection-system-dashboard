@@ -32,7 +32,7 @@ export default function Palette({ open, onClose }) {
       t: 'Checkpoint', n: item.id + ' · ' + item.room, s: t(item.location), h: 'overview/' + item.id, c: 'E6EEFA', f: '1E4F8C', i: item.id.slice(2),
     })),
     ...sampleInspectionRecords.map(item => {
-      const incident = incidents.find(entry => entry.id === item.status.split(' · ')[0]);
+      const incident = incidents.find(entry => entry.id === item.incidentId);
       const status = incident ? [incident.id, INCIDENT_LABELS[incident.status]] : item.status.split(' · ');
       return {
         t: 'Record', n: item.id + ' · ' + item.location,

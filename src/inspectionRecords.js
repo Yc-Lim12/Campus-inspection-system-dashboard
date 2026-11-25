@@ -33,6 +33,8 @@ const rows = [
   [1021, '2026-11-17', '15:57', 'CP2', 'Floor obstruction', 24.8, 61, 21, 'INC-0221 · Resolved'],
   [1020, '2026-11-17', '15:45', 'CP1', 'No hazard', 24.6, 63, 17],
   [1019, '2026-11-17', '10:07', 'CP4', 'No hazard', 24.2, 60, 12],
+  [1018, '2026-11-16', '14:32', 'CP2', 'Air above limit', 24.8, 62, 37, 'INC-0219'],
+  [1017, '2026-11-15', '10:18', 'CP4', 'Floor obstruction', 24.3, 58, 16, 'INC-0217'],
 ];
 
 export const sampleInspectionRecords = rows.map(([id, day, time, checkpoint, hazard, temperature, humidity, pm25, status = '—', gas = null]) => ({
@@ -46,5 +48,6 @@ export const sampleInspectionRecords = rows.map(([id, day, time, checkpoint, haz
   humidity,
   pm25,
   gas,
+  incidentId: /^INC-\d+/.exec(status)?.[0],
   status,
 }));

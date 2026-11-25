@@ -34,7 +34,7 @@ export const policySections = [
         {
           title: 'Who can see it',
           text: 'Access is planned for authorised facility staff and administrators according to their role. Data is for facility operations and is excluded from sale or marketing. The proposed external recipient is an approved AI provider. Any other provider that would handle personal data must be identified in the live notice before that data is shared.',
-          link: ['AI Assistant Notice', '#legal/ai'],
+          link: ['Natural-language query interface notice', '#legal/ai'],
         },
         {
           title: 'How we plan to protect it',
@@ -80,7 +80,7 @@ export const policySections = [
         {
           title: 'Pihak yang boleh mengakses data',
           text: 'Akses dirancang untuk staf fasiliti dan pentadbir yang diberi kuasa mengikut peranan. Data digunakan untuk operasi fasiliti dan tidak dijual atau digunakan untuk pemasaran. Pihak luar yang dicadangkan ialah penyedia AI yang diluluskan. Penyedia lain yang akan mengendalikan data peribadi perlu dikenal pasti dalam notis sistem sebenar sebelum data dikongsi.',
-          link: ['Notis Pembantu AI', '#legal/ai'],
+          link: ['Notis antara muka pertanyaan bahasa semula jadi', '#legal/ai'],
         },
         {
           title: 'Cara data akan dilindungi',
@@ -142,8 +142,8 @@ export const policySections = [
   },
   {
     id: 'ai',
-    title: 'AI Assistant Notice',
-    titleMs: 'Notis Pembantu AI',
+    title: 'Natural-language query interface notice',
+    titleMs: 'Notis antara muka pertanyaan bahasa semula jadi',
     en: {
       demo: 'The demo assistant uses built-in rules to answer questions from sample readings and local alerts. Robot commands are handled by the dedicated dashboard controls. Conversation history is stored in the current browser tab until sign-out.',
       blocks: [

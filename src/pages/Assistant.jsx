@@ -109,7 +109,7 @@ function answer(question, responseLanguage, incidents, configuration) {
 }
 
 const interfaceCopy = {
-  'AI Assistant': ['Pembantu AI', 'AI 助手'], 'Reply language': ['Bahasa jawapan', '回复语言'],
+  'Reply language': ['Bahasa jawapan', '回复语言'],
   'Match question': ['Ikut soalan', '跟随提问'], 'New chat': ['Sembang baharu', '新对话'],
   'How can I help?': ['Bagaimanakah saya boleh membantu?', '有什么可以帮您？'],
   'Ask about campus incidents and inspection readings.': ['Tanya tentang insiden kampus dan bacaan pemeriksaan.', '可查询校园事件和巡检读数。'],
@@ -196,13 +196,13 @@ export default function Assistant() {
   }
 
   return (
-    <DashboardPage title={t('AI Assistant')} lang={language} className="pg-assistant">
+    <DashboardPage title={t('Natural-language query interface')} lang={language} className="pg-assistant">
       <div className={'chat-layout' + (historyOpen ? ' chat-layout-with-history' : '')}>
-        <section className="card chat-shell" aria-label={t('AI Assistant')}>
+        <section className="card chat-shell" aria-label={t('Natural-language query interface')}>
           <header className="chat-header">
             <div className="chat-identity">
               <AssistantMark />
-              <h2>{t('AI Assistant')}</h2>
+              <h2>{t('Natural-language query interface')}</h2>
             </div>
             <div className="chat-header-actions">
               <label className="chat-language">{t('Reply language')}

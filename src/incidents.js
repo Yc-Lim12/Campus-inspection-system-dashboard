@@ -15,8 +15,8 @@ const rows = [
   ['INC-0225', 'PM2.5 above limit', 'CP2', 'UC-8-8', '2026-11-19', '15:40', 'Medium', 'resolved', null, 38],
   ['INC-0224', 'Water leak or stain', 'CP1', 'UW-8-5', '2026-11-18', '15:28', 'High', 'resolved'],
   ['INC-0221', 'Floor obstruction', 'CP2', 'UC-8-8', '2026-11-17', '15:57', 'Medium', 'resolved'],
-  ['INC-0219', 'PM2.5 above limit', 'CP2', 'UC-8-8', '2026-11-16', null, 'Medium', 'resolved'],
-  ['INC-0217', 'Floor obstruction', 'CP4', 'UC-8-11', '2026-11-15', null, 'Medium', 'resolved'],
+  ['INC-0219', 'PM2.5 above limit', 'CP2', 'UC-8-8', '2026-11-16', '14:32', 'Medium', 'resolved', null, 37],
+  ['INC-0217', 'Floor obstruction', 'CP4', 'UC-8-11', '2026-11-15', '10:18', 'Medium', 'resolved'],
 ];
 
 export function incidentTimestamp(day, time) {

@@ -38,7 +38,7 @@ function RecordSummary({ records }) {
   const { t } = useDashboardLocale();
   const metrics = [
     ['Sample checks', records.length],
-    ['Hazards found', records.filter(record => record.hazard !== 'No hazard').length],
+    ['Incidents found', new Set(records.map(record => record.incidentId).filter(Boolean)).size],
     ['PM2.5 above limit', records.filter(record => record.pm25Flag).length],
     ['Checkpoints covered', new Set(records.map(record => record.checkpoint)).size],
   ];
@@ -90,8 +90,7 @@ export default function Records({ section }) {
     setPage(0);
   }, [section]);
   const currentRecords = sampleInspectionRecords.map(record => {
-    const id = record.status.split(' · ')[0];
-    const incident = incidents.find(item => item.id === id);
+    const incident = incidents.find(item => item.id === record.incidentId);
     return {
       ...record,
       pm25Flag: record.pm25 > limitsForCheckpoint(configuration, record.checkpoint).pm25,
