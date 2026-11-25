@@ -196,13 +196,13 @@ export default function Assistant() {
   }
 
   return (
-    <DashboardPage title={t('Natural-language query interface')} lang={language} className="pg-assistant">
+    <DashboardPage title={t('AI Assistant')} lang={language} className="pg-assistant">
       <div className={'chat-layout' + (historyOpen ? ' chat-layout-with-history' : '')}>
-        <section className="card chat-shell" aria-label={t('Natural-language query interface')}>
+        <section className="card chat-shell" aria-label={t('AI Assistant')}>
           <header className="chat-header">
             <div className="chat-identity">
               <AssistantMark />
-              <h2>{t('Natural-language query interface')}</h2>
+              <h2>{t('AI Assistant')}</h2>
             </div>
             <div className="chat-header-actions">
               <label className="chat-language">{t('Reply language')}

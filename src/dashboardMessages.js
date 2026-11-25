@@ -413,7 +413,7 @@ export const dashboardMessages = {
   "Coral": ["Koral", "珊瑚色"],
   "Chassis schematic": ["Skema casis", "底盘示意图"],
   "Campus Inspection Robot chassis with a tall tapered body, touchscreen, and round wheeled base": ["Casis Robot Pemeriksaan Kampus dengan badan tinggi tirus, skrin sentuh dan tapak bulat beroda", "校园巡检机器人底盘，配有高而渐窄的机身、触摸屏和圆形轮式底座"],
-  "Natural-language query interface": ["Antara muka pertanyaan bahasa semula jadi", "自然语言查询界面"],
+  "AI Assistant": ["Pembantu AI", "AI 助手"],
   "Minor floor obstruction": ["Halangan kecil di lantai", "轻微地面障碍"],
   "Response deadline": ["Tarikh akhir tindakan", "响应截止时间"],
   "Response deadlines": ["Tarikh akhir tindakan", "响应时限"],
