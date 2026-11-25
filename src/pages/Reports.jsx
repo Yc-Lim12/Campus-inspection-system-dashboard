@@ -57,7 +57,7 @@ function startOfWeek(day) {
 }
 
 function ReportSelect({ label, value, options, onChange }) {
-  return <label>{label}<select value={value} onChange={event => onChange(event.target.value)}>
+  return <label>{label}<select className="report-select" value={value} onChange={event => onChange(event.target.value)}>
     {options.map(([id, text]) => <option key={id} value={id}>{text}</option>)}
   </select></label>;
 }

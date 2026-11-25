@@ -562,10 +562,11 @@
 /* Dashboard language and filter pickers share the active theme accent. */
 @supports (appearance: base-select) and selector(::picker(select)) {
   :is(.rsx-seg, .login-language) > select,
-  :is(.rsx-seg > select, .setting-select > select, .login-language > select)::picker(select) {
+  .report-select,
+  :is(.rsx-seg > select, .setting-select > select, .login-language > select, .report-select)::picker(select) {
     appearance: base-select;
   }
-  :is(.rsx-seg > select, .setting-select > select, .login-language > select)::picker(select) {
+  :is(.rsx-seg > select, .setting-select > select, .login-language > select, .report-select)::picker(select) {
     box-sizing: border-box;
     min-inline-size: min(max(anchor-size(width), 13rem), calc(100vw - 24px));
     max-inline-size: calc(100vw - 24px);
@@ -579,7 +580,7 @@
     opacity: 1;
     font: 500 14px/1.4 var(--type);
   }
-  :is(.rsx-seg > select, .setting-select > select, .login-language > select) option {
+  :is(.rsx-seg > select, .setting-select > select, .login-language > select, .report-select) option {
     box-sizing: border-box;
     min-block-size: 40px;
     padding: 9px 11px;
@@ -587,26 +588,26 @@
     border-radius: var(--r-sm);
     cursor: pointer;
   }
-  :is(.rsx-seg > select, .setting-select > select, .login-language > select) option:checked {
+  :is(.rsx-seg > select, .setting-select > select, .login-language > select, .report-select) option:checked {
     background: var(--accent-surface);
     color: var(--accent);
     font-weight: 650;
   }
-  :is(.rsx-seg > select, .setting-select > select, .login-language > select) option:is(:hover, :focus-visible) {
+  :is(.rsx-seg > select, .setting-select > select, .login-language > select, .report-select) option:is(:hover, :focus-visible) {
     background: color-mix(in srgb, var(--accent-surface) 90%, var(--accent));
     color: var(--accent);
   }
-  :is(.rsx-seg > select, .setting-select > select, .login-language > select) option:focus-visible {
+  :is(.rsx-seg > select, .setting-select > select, .login-language > select, .report-select) option:focus-visible {
     outline: 2px solid var(--accent-strong);
     outline-offset: -2px;
   }
-  :is(.rsx-seg > select, .setting-select > select, .login-language > select) option::checkmark {
+  :is(.rsx-seg > select, .setting-select > select, .login-language > select, .report-select) option::checkmark {
     order: 1;
     margin-inline-start: auto;
     color: var(--accent);
   }
   @media (prefers-reduced-motion: no-preference) {
-    :is(.rsx-seg > select, .setting-select > select, .login-language > select)::picker(select) {
+    :is(.rsx-seg > select, .setting-select > select, .login-language > select, .report-select)::picker(select) {
       animation: themed-picker-in 140ms var(--ease);
     }
   }
@@ -1518,6 +1519,21 @@ ol.workflow-list { padding-inline-start: 24px; }
 .report-incident-fields { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); }
 .report-filters .workflow-form label { font-size: 13px; }
 .report-filters :is(input, select) { width: 100%; min-width: 0; }
+.report-select { cursor: pointer; }
+@supports (appearance: base-select) and selector(::picker(select)) {
+  .report-select { display: flex; align-items: center; gap: 8px; }
+  .report-select::picker-icon {
+    content: "";
+    width: 7px;
+    height: 7px;
+    flex: none;
+    margin-inline: auto 4px;
+    border-right: 2px solid var(--accent);
+    border-bottom: 2px solid var(--accent);
+    transform: translateY(-2px) rotate(45deg);
+  }
+  .report-select:open::picker-icon { transform: translateY(2px) rotate(225deg); }
+}
 .report-filters [aria-invalid="true"] { border-color: var(--danger) !important; }
 .report-error { color: var(--danger); }
 .report-metrics { margin: 0; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
