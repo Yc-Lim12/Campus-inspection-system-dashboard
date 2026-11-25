@@ -1,3 +1,9 @@
 node_modules/
 .DS_Store
 *.log
+
+# Humanish studies, runtime files, and local secrets
+/humanish/
+/.humanish/
+.env*
+!.env.example
