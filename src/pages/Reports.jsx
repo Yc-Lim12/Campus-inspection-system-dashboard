@@ -1,9 +1,12 @@
 import React from 'react';
 import DashboardPage from '../DashboardPage.jsx';
+import DateFilter from '../DateFilter.jsx';
+import { campusDayLabel } from '../campusDates.js';
+import { campusTime, limitsForCheckpoint } from '../dashboardState.js';
 import { DemoCtx } from '../ctx.js';
 import { useDashboardLocale } from '../dashboardLocale.js';
 import { exportSampleTables } from '../exportSampleTables.js';
-import { INCIDENT_LABELS } from '../incidents.js';
+import { INCIDENT_LABELS, RESPONSE_HOURS, incidentTimestamp } from '../incidents.js';
 import { sampleInspectionRecords } from '../inspectionRecords.js';
 
 const tabs = [['summary', 'Summary'], ['incidents', 'Incidents'], ['air-quality', 'Air quality'], ['patrol-log', 'Patrol log']];
@@ -75,7 +78,7 @@ function ResolutionChart({ groups, t }) {
   return <div className="report-chart" aria-hidden="true">
     <div className="report-legend"><span>{t('Resolved')}</span><span>{t('Unresolved')}</span></div>
     {groups.map(({ day, detected, resolved }) => (
-      <div className="report-chart-row" key={day}><span>{day}</span>
+      <div className="report-chart-row" key={day}><span>{campusDayLabel(day)}</span>
         <div className="report-chart-track">
           <span style={{ width: (resolved / max * 100) + '%' }} />
           <span style={{ width: ((detected - resolved) / max * 100) + '%' }} />
@@ -142,32 +145,36 @@ export default function Reports({ section }) {
   let rows;
   if (summary) {
     columns = [period === 'weekly' ? 'Week starting' : 'Date', 'Detected', 'Resolved', 'Unresolved'];
-    rows = groups.map(({ day, detected, resolved }) => ({ id: day, cells: [day, detected, resolved, detected - resolved] }));
+    rows = groups.map(({ day, detected, resolved }) => ({ id: day, cells: [campusDayLabel(day), detected, resolved, detected - resolved] }));
   } else if (tab === 'incidents') {
-    columns = ['Incident', 'Date', 'Hazard', 'Checkpoint', 'Severity', 'Status', 'Assigned to'];
+    columns = ['Incident', 'Date and time', 'Hazard', 'Checkpoint', 'Severity', 'Status', 'Assigned to'];
     rows = matchingIncidents.map(item => ({ id: item.id, cells: [
-      <a href={'#alerts/' + item.id}>{item.id}</a>, item.day, t(item.title), item.checkpoint + ' · ' + item.room,
+      <a href={'#alerts/' + item.id}>{item.id}</a>, item.time ? campusTime(incidentTimestamp(item.day, item.time), language) : campusDayLabel(item.day),
+      t(item.title), item.checkpoint + ' · ' + item.room,
       <span className="report-severity" data-severity={item.severity}>{t(item.severity)}</span>,
       t(INCIDENT_LABELS[item.status]), t(item.assignment),
     ] }));
   } else if (tab === 'air-quality') {
-    columns = ['Record', 'Date and time', 'Checkpoint', 'Temperature', 'Humidity', 'PM2.5', 'Limits exceeded'];
-    const { temperatureMin, temperatureMax, humidityMin, humidityMax, pm25 } = configuration.limits;
+    columns = ['Record', 'Date and time', 'Checkpoint', 'Temperature', 'Humidity', 'PM2.5', 'Gas (MQ135)', 'Limits exceeded'];
     rows = readings.flatMap(item => {
+      const { temperatureMin, temperatureMax, humidityMin, humidityMax, pm25, gas } = limitsForCheckpoint(configuration, item.checkpoint);
       const exceeded = [
         (item.temperature < temperatureMin || item.temperature > temperatureMax) && t('Temperature'),
         (item.humidity < humidityMin || item.humidity > humidityMax) && t('Humidity'),
         item.pm25 > pm25 && 'PM2.5',
+        item.gas != null && item.gas > gas && t('Gas (MQ135)'),
       ].filter(Boolean).join(', ');
-      const values = [item.temperature.toFixed(1) + ' °C', item.humidity + '%', item.pm25 + ' µg/m³', exceeded || t('Within limits')];
-      if (!matchesText(item.id, item.day, item.time, item.location, item.hazard, t(item.hazard), item.status, 'PM2.5', ...values)) return [];
-      return [{ id: item.id, cells: [<a href={'#records/' + item.id}>{item.id}</a>, item.day + ' ' + item.time, item.location, ...values] }];
+      const timestamp = campusTime(incidentTimestamp(item.day, item.time), language);
+      const values = [item.temperature.toFixed(1) + ' °C', item.humidity + '%', item.pm25 + ' µg/m³',
+        item.gas == null ? '—' : '+' + item.gas + '%', exceeded || t('Within limits')];
+      if (!matchesText(item.id, item.day, timestamp, item.location, item.hazard, t(item.hazard), item.status, 'PM2.5', ...values)) return [];
+      return [{ id: item.id, cells: [<a href={'#records/' + item.id}>{item.id}</a>, timestamp, item.location, ...values] }];
     });
   } else {
     columns = ['Patrol window', 'Checkpoints inspected', 'Readings'];
     rows = Array.from(patrols, ([key, group]) => ({ key, ...group }))
-      .filter(group => matchesText(group.day, group.shift, t(group.shift), ...group.rooms))
-      .map(group => ({ id: group.key, cells: [group.day + ' · ' + t(group.shift), [...group.checkpoints].sort().join(', '), group.total] }));
+      .filter(group => matchesText(group.day, campusDayLabel(group.day), group.shift, t(group.shift), ...group.rooms))
+      .map(group => ({ id: group.key, cells: [campusDayLabel(group.day) + ' · ' + t(group.shift), [...group.checkpoints].sort().join(', '), group.total] }));
   }
 
   const options = (all, values) => [['', t(all)], ...[...new Set(values)].map(value => [value, t(value)]).sort((a, b) => a[1].localeCompare(b[1], language))];
@@ -198,12 +205,12 @@ export default function Reports({ section }) {
             placeholder={t(placeholder)} autoComplete="off" /></label>
           <ReportSelect label={t('Checkpoint')} value={checkpoint} options={[['', t('All checkpoints')], ...configuration.checkpoints.map(item =>
             [item.id, item.id + ' · ' + item.room])]} onChange={set('checkpoint')} />
-          <label>{t('From')}<input type="date" value={from} onChange={event => set('from')(event.target.value)} aria-invalid={badRange || undefined} /></label>
-          <label>{t('To')}<input type="date" value={to} onChange={event => set('to')(event.target.value)} aria-invalid={badRange || undefined} /></label>
+          <DateFilter label={t('From')} value={from} invalidRange={badRange} onChange={set('from')} />
+          <DateFilter label={t('To')} value={to} invalidRange={badRange} onChange={set('to')} />
         </div>
         {incidentTab && <div className="workflow-form report-incident-fields">
           <ReportSelect label={t('Hazard type')} value={hazard} options={options('All hazards', incidents.map(item => item.title))} onChange={set('hazard')} />
-          <ReportSelect label={t('Severity')} value={severity} options={options('All severities', ['High', 'Medium', 'Low'])} onChange={set('severity')} />
+          <ReportSelect label={t('Severity')} value={severity} options={options('All severities', Object.keys(RESPONSE_HOURS))} onChange={set('severity')} />
           <ReportSelect label={t('Status')} value={status} options={[[ '', t('Any status') ], ...Object.entries(INCIDENT_LABELS).map(([id, label]) => [id, t(label)])]} onChange={set('status')} />
           <ReportSelect label={t('Assigned to')} value={assignment} options={options('All assignments', incidents.map(item => item.assignment))} onChange={set('assignment')} />
         </div>}

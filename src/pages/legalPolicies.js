@@ -145,7 +145,7 @@ export const policySections = [
     title: 'AI Assistant Notice',
     titleMs: 'Notis Pembantu AI',
     en: {
-      demo: 'The demo assistant uses built-in rules to answer questions from sample readings and local alerts. Confirmed commands update the robot simulator. Conversation history is stored in the current browser tab until sign-out.',
+      demo: 'The demo assistant uses built-in rules to answer questions from sample readings and local alerts. Robot commands are handled by the dedicated dashboard controls. Conversation history is stored in the current browser tab until sign-out.',
       blocks: [
         {
           title: 'Answers and data shared',
@@ -157,13 +157,13 @@ export const policySections = [
         },
         {
           title: 'Command confirmation',
-          text: 'The proposed assistant can offer three commands: start a patrol, go to a predefined checkpoint, and return to the start point. An authorised staff member must confirm the command and check that it is safe before it can run.',
+          text: 'Robot controls on the Overview and Camera pages can start a patrol, go to a predefined checkpoint, or return to the dock. An authorised staff member must confirm movement and check that it is safe before it can run.',
           link: ['Robot Safety', '#legal/safety'],
         },
       ],
     },
     ms: {
-      demo: 'Pembantu demo menggunakan peraturan terbina dalam untuk menjawab soalan berdasarkan bacaan contoh dan amaran tempatan. Arahan yang disahkan mengemas kini simulator robot. Sejarah perbualan disimpan dalam tab pelayar semasa sehingga anda log keluar.',
+      demo: 'Pembantu demo menggunakan peraturan terbina dalam untuk menjawab soalan berdasarkan bacaan contoh dan amaran tempatan. Arahan robot dikendalikan melalui kawalan khusus pada papan pemuka. Sejarah perbualan disimpan dalam tab pelayar semasa sehingga anda log keluar.',
       blocks: [
         {
           title: 'Jawapan dan data yang dikongsi',
@@ -175,7 +175,7 @@ export const policySections = [
         },
         {
           title: 'Pengesahan arahan',
-          text: 'Pembantu yang dicadangkan boleh menawarkan tiga arahan: mulakan rondaan, pergi ke pusat pemeriksaan yang ditetapkan dan kembali ke tempat mula. Staf yang diberi kuasa mesti mengesahkan arahan dan memastikan keadaan selamat sebelum arahan dilaksanakan.',
+          text: 'Kawalan robot pada halaman Gambaran keseluruhan dan Kamera boleh memulakan rondaan, menghantar robot ke titik pemeriksaan yang ditetapkan atau mengembalikannya ke dok. Staf yang diberi kuasa mesti mengesahkan pergerakan dan memastikan keadaan selamat sebelum arahan dilaksanakan.',
           link: ['Keselamatan Robot', '#legal/safety'],
         },
       ],

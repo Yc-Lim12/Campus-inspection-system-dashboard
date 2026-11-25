@@ -1,21 +1,21 @@
 import React from 'react';
 import { useDashboardLocale } from '../dashboardLocale.js';
+import { campusDayLabel } from '../campusDates.js';
+import { campusTime, limitsForCheckpoint } from '../dashboardState.js';
 import Sidebar from '../Sidebar.jsx';
 import { exportSampleTables } from '../exportSampleTables.js';
 import { sampleInspectionRecords } from '../inspectionRecords.js';
 import { DemoCtx } from '../ctx.js';
-import { INCIDENT_LABELS } from '../incidents.js';
+import { INCIDENT_LABELS, incidentTimestamp } from '../incidents.js';
 import { prefersReducedMotion } from '../preferences.js';
 import RecordSearch from '../RecordSearch.jsx';
 
 const PAGE_SIZE = 10;
 const EMPTY_FILTERS = { q: '', cp: '', from: '', to: '', hz: '' };
-const dayFormats = new Map(['en-GB', 'ms-MY', 'zh-MY'].map(locale => [
-  locale.slice(0, 2), new Intl.DateTimeFormat(locale, { day: 'numeric', month: 'short', timeZone: 'UTC' }),
-]));
-const hazardTones = { 'No hazard': 'ok', 'Water leak or stain': 'high', 'Wall crack': 'high', 'Floor obstruction': 'med' };
+const hazardTones = { 'No hazard': 'ok', 'Water leak or stain': 'high', 'Wall crack': 'high', 'Floor obstruction': 'med',
+  'Air above limit': 'med', 'Minor floor obstruction': 'ok' };
 
-const displayTime = (record, language = 'en') => dayFormats.get(language).format(new Date(record.day)) + ', ' + record.time;
+const displayTime = (record, language = 'en') => campusTime(incidentTimestamp(record.day, record.time), language);
 const displayClimate = (record) => record.temperature.toFixed(1) + ' °C / ' + record.humidity + '%';
 const displayParticles = (record) => record.pm25 + ' µg/m³' + (record.pm25Flag ? ' · above limit' : '');
 
@@ -28,7 +28,8 @@ function filterRecords(records, { q, cp, from, to, hz }, t, language) {
     if (to && record.day > to) return false;
     if (hz && record.hazard !== hz) return false;
 
-    const fields = [record.id, displayTime(record), displayTime(record, language), record.location, record.hazard, t(record.hazard), displayClimate(record), displayParticles(record), record.status, ...record.status.split(' · ').map(part => t(part))];
+    const fields = [record.id, record.day, campusDayLabel(record.day), displayTime(record, language), record.location, record.hazard,
+      t(record.hazard), displayClimate(record), displayParticles(record), record.status, ...record.status.split(' · ').map(part => t(part))];
     return !search || fields.join(' ').toLowerCase().includes(search);
   });
 }
@@ -38,7 +39,7 @@ function RecordSummary({ records }) {
   const metrics = [
     ['Sample checks', records.length],
     ['Hazards found', records.filter(record => record.hazard !== 'No hazard').length],
-    ['PM2.5 above demo threshold', records.filter(record => record.pm25Flag).length],
+    ['PM2.5 above limit', records.filter(record => record.pm25Flag).length],
     ['Checkpoints covered', new Set(records.map(record => record.checkpoint)).size],
   ];
 
@@ -60,7 +61,12 @@ function RecordRow({ record }) {
   return (
     <tr>
       <td style={{ fontWeight: 600, fontVariantNumeric: 'tabular-nums' }}>{record.id}</td>
-      <td><div className="thumb" role="img" aria-label={t("Sample photo placeholder")} /></td>
+      <td>{record.photo ? <img className="record-photo" loading="lazy" src={record.photo} alt={t('Sample water leak on a corridor floor')} />
+        : <span className="record-no-photo muted">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" aria-hidden="true">
+              <rect x="4" y="4" width="16" height="16" rx="2" /><path d="m4 17 4-4 3 3 3-4 6 6M3 3l18 18" />
+            </svg>{t('No photo')}
+          </span>}</td>
       <td><time dateTime={record.day + 'T' + record.time + '+08:00'}>{displayTime(record, language)}</time></td>
       <td>{record.location}</td>
       <td><span className={'pill ' + hazardTones[record.hazard]}>{t(record.hazard)}</span></td>
@@ -88,7 +94,8 @@ export default function Records({ section }) {
     const incident = incidents.find(item => item.id === id);
     return {
       ...record,
-      pm25Flag: record.pm25 > configuration.limits.pm25,
+      pm25Flag: record.pm25 > limitsForCheckpoint(configuration, record.checkpoint).pm25,
+      photo: incident?.photo,
       status: incident ? incident.id + ' · ' + INCIDENT_LABELS[incident.status] : record.status,
     };
   });

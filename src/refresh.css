@@ -627,14 +627,12 @@
   padding: 0 16px;
   border: 0;
   border-radius: var(--r-pill);
-  background: var(--accent-strong);
-  color: #fff;
+  background: var(--primary-button);
+  color: var(--surface);
   font: 600 15px var(--type);
   cursor: pointer;
-  box-shadow: 0 4px 12px light-dark(#5b5fe655, #00000066);
   transition: background-color 160ms var(--ease), transform 120ms var(--ease);
 }
-.rsx-go:hover { background: var(--accent); }
 .rsx-go:active { transform: scale(.98); }
 
 .rsx-status { min-height: 20px; margin: 0 0 0 30px; display: flex; flex-wrap: wrap; align-items: center; gap: 12px; font-size: 13px; color: var(--muted-ink); }
@@ -680,9 +678,6 @@
   --accent-line: light-dark(#ffc6d1, #7a2a3b);
 }
 /* Button shadows follow the accent */
-.rsx-go { box-shadow: 0 4px 12px color-mix(in srgb, var(--accent-strong) 35%, transparent) !important; }
-:root[data-accent="graphite"] .rsx-go { color: var(--surface); }
-
 /* Picker */
 .accent-row { flex-wrap: wrap; gap: 12px 16px; }
 .accent-text { display: grid; gap: 3px; }
@@ -809,11 +804,7 @@
 
 /* Accent fills that carry text */
 :root:root:root .pg-assistant .asu,
-.rsx-go {
-  background: var(--accent-solid) !important;
-  color: var(--on-accent) !important;
-}
-.rsx-go:hover { background: var(--accent-solid) !important; filter: brightness(1.1); }
+.rsx-go:hover { filter: brightness(1.15); }
 :root:root:root .pg-admin :is(.rl.adm2, .num),
 :root:root:root .pg-reports .h3 {
   background: var(--accent-surface) !important;
@@ -1780,26 +1771,6 @@ ol.workflow-list { padding-inline-start: 24px; }
 .login-language > select { min-inline-size: 8rem; padding: 7px 10px; }
 .login-language > select::picker-icon { color: var(--accent); }
 
-:root:root:root .pg-admin .btn.primary.add-checkpoint {
-  background: var(--accent-solid) !important;
-  color: var(--on-accent) !important;
-  border: 0 !important;
-  border-radius: var(--r-pill);
-  box-shadow: none !important;
-  filter: none !important;
-  transition: background-color 150ms ease, transform 150ms ease;
-}
-:root:root:root .pg-admin .btn.primary.add-checkpoint:hover {
-  background: color-mix(in srgb, var(--accent-solid) 78%, white) !important;
-  transform: translateY(-2px);
-}
-:root:root:root .pg-admin .btn.primary.add-checkpoint:active { transform: translateY(0); }
-@media (prefers-reduced-motion: reduce) {
-  :root:root:root .pg-admin .btn.primary.add-checkpoint { transition: none; }
-  :root:root:root .pg-admin .btn.primary.add-checkpoint:hover { transform: none; }
-}
-:root[data-reduce-motion] .pg-admin .btn.primary.add-checkpoint:hover { transform: none !important; }
-
 @supports (appearance: base-select) and selector(::picker(select)) {
   /* Keep the login language menu below its trigger. */
   .login-language > select::picker(select) {
@@ -1809,3 +1780,70 @@ ol.workflow-list { padding-inline-start: 24px; }
     overflow-y: auto;
   }
 }
+
+/* Incident evidence, SLA, and checkpoint readings */
+.alert-evidence { margin: 0; }
+.alert-evidence img {
+  display: block;
+  width: 100%;
+  max-height: 270px;
+  object-fit: cover;
+  object-position: center 65%;
+  border-radius: var(--r-sm);
+}
+.alert-evidence figcaption { margin-top: 5px; color: var(--muted-ink); font-size: 12px; }
+.alert-list-meta { display: flex; align-items: center; gap: 7px; }
+.sla-overdue { color: var(--danger); }
+.report-severity[data-severity="Low"] { color: var(--accent); background: var(--accent-surface); }
+.admin-config-form label { font-size: 13px; }
+.admin-config-form .workflow-fields label { grid-template-rows: 1fr auto; }
+.record-photo, .incident-thumb { display: block; width: 48px; height: 34px; object-fit: cover; border-radius: 5px; }
+.record-no-photo { display: inline-flex; align-items: center; gap: 4px; white-space: nowrap; font-size: 12px; }
+.incident-thumb.report-severity { display: grid; place-items: center; padding: 0; }
+
+.overview-incidents { flex: 3 1 520px; min-width: 0; }
+.overview-incident-heading { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px; }
+.pg-overview .overview-incident-heading h2 { margin: 0; }
+.pg-overview .overview-incidents .ilist a { grid-template-columns: 48px minmax(0, 1fr) max-content minmax(70px, 125px); gap: 10px; }
+.overview-incident-status { display: grid; gap: 4px; justify-items: start; font-size: 12px; }
+.overview-incidents li[data-severity="High"] a { border-left-color: var(--danger); }
+.overview-incidents li[data-severity="Medium"] a { border-left-color: var(--warning); }
+.overview-incidents li[data-severity="Low"] a { border-left-color: var(--accent); }
+.overview-air { flex: 1 1 316px; min-width: 0; }
+.overview-air-scroll { overflow-x: auto; }
+.overview-air > p { font-size: 12px; }
+@media (max-width: 760px) {
+  .pg-overview .overview-incidents .ilist a { grid-template-columns: 48px minmax(0, 1fr); }
+  .overview-incidents .ilist a > :nth-child(n + 3) { grid-column: 2; }
+}
+
+.date-filter { display: grid; align-content: start; gap: 4px; min-width: 0; }
+.date-filter-control { display: flex; align-items: center; position: relative; min-width: 0; }
+.date-filter-control > input[type="text"] { padding-inline-end: 28px; font-variant-numeric: tabular-nums; }
+.date-filter-control > input.date-filter-native {
+  position: absolute;
+  inset-inline-end: 0;
+  inset-block-end: 0;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+  pointer-events: none;
+}
+.date-filter-picker {
+  display: grid;
+  place-items: center;
+  position: absolute;
+  inset-inline-end: 4px;
+  width: 23px;
+  height: 25px;
+  border: 0;
+  background: transparent;
+  color: var(--muted-ink);
+  cursor: pointer;
+}
+.date-filter-picker:hover { color: var(--accent); }
+.date-filter-error { font-size: 11px; }
+.rsx-date .date-filter { gap: 2px; }
+.rsx-date .date-filter label { font-size: 12px; font-weight: 650; }
+.rsx-date .date-filter-picker { inset-inline-end: -3px; }
+.rsx-date .date-filter-control input[type="text"] { padding-inline-end: 20px; }

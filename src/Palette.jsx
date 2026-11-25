@@ -3,14 +3,15 @@ import { useDashboardLocale } from './dashboardLocale.js';
 import { DemoCtx } from './ctx.js';
 import { SEARCH } from './data.js';
 import { sampleInspectionRecords } from './inspectionRecords.js';
-import { INCIDENT_LABELS } from './incidents.js';
+import { INCIDENT_LABELS, incidentTimestamp } from './incidents.js';
+import { campusTime } from './dashboardState.js';
 const FILTERS = [['', 'All'], ['Incident', 'Incidents'], ['Checkpoint', 'Checkpoints'], ['Record', 'Records'], ['Page', 'Pages']];
 function Hl({ s, v }) {
   if (!v) return s; const i = s.toLowerCase().indexOf(v); if (i < 0) return s;
   return <>{s.slice(0, i)}<mark>{s.slice(i, i + v.length)}</mark>{s.slice(i + v.length)}</>;
 }
 export default function Palette({ open, onClose }) {
-  const { t } = useDashboardLocale();
+  const { language, t } = useDashboardLocale();
   const { role, incidents, configuration } = React.useContext(DemoCtx);
   const [q, setQ] = React.useState(''); const [flt, setFlt] = React.useState(''); const [act, setAct] = React.useState(0);
   const input = React.useRef(null); const list = React.useRef(null);
@@ -30,10 +31,15 @@ export default function Palette({ open, onClose }) {
     ...configuration.checkpoints.map(item => ({
       t: 'Checkpoint', n: item.id + ' · ' + item.room, s: t(item.location), h: 'overview/' + item.id, c: 'E6EEFA', f: '1E4F8C', i: item.id.slice(2),
     })),
-    ...sampleInspectionRecords.map(item => ({
-      t: 'Record', n: item.id + ' · ' + item.location, s: item.day + ' · ' + t(item.hazard) + ' · ' + item.status.split(' · ').map(part => t(part)).join(' · '),
-      h: 'records/' + item.id, c: 'F2F4F7', f: '3A3A3C', i: 'R',
-    })),
+    ...sampleInspectionRecords.map(item => {
+      const incident = incidents.find(entry => entry.id === item.status.split(' · ')[0]);
+      const status = incident ? [incident.id, INCIDENT_LABELS[incident.status]] : item.status.split(' · ');
+      return {
+        t: 'Record', n: item.id + ' · ' + item.location,
+        s: [campusTime(incidentTimestamp(item.day, item.time), language), t(item.hazard), ...status.map(part => t(part))].join(' · '),
+        h: 'records/' + item.id, c: 'F2F4F7', f: '3A3A3C', i: 'R',
+      };
+    }),
     ...SEARCH.map(entry => ({ ...entry, n: t(entry.n), s: t(entry.s) })),
   ];
   const rows = entries.filter((d) => (role === 'admin' || d.h !== 'admin') && (!flt || d.t === flt) && (!v || `${d.n} ${d.s} ${d.t}`.toLowerCase().includes(v)));

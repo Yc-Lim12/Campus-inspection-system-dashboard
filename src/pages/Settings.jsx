@@ -24,6 +24,9 @@ const copy = {
   'Medium alert filtered out by High only.': ['Amaran sederhana ditapis oleh tetapan keparahan tinggi sahaja.', '仅高严重程度设置已过滤中级警报。'],
   'High alert preview shown.': ['Pratonton amaran tinggi dipaparkan.', '已显示高级警报预览。'],
   'Medium alert preview shown.': ['Pratonton amaran sederhana dipaparkan.', '已显示中级警报预览。'],
+  'Preview low alert': ['Pratonton amaran rendah', '预览低级警报'],
+  'Low alert preview shown.': ['Pratonton amaran rendah dipaparkan.', '已显示低级警报预览。'],
+  'Low alert filtered out by High only.': ['Amaran rendah ditapis oleh tetapan keparahan tinggi sahaja.', '仅高严重程度设置已过滤低级警报。'],
   'Audio is unavailable in this browser.': ['Audio tidak tersedia dalam pelayar ini.', '此浏览器无法播放音频。'],
   Account: ['Akaun', '账户'], 'Privacy, terms and policies': ['Privasi, terma dan dasar', '隐私、条款和政策'],
   'Sign out': ['Log keluar', '退出登录'],
@@ -79,10 +82,12 @@ export default function Settings() {
   async function previewAlert(severity) {
     const id = ++previewId.current;
     if (preferences.severity === 'high' && severity !== 'high') {
-      setPreview(['Medium alert filtered out by High only.']);
+      setPreview([severity === 'low' ? 'Low alert filtered out by High only.' : 'Medium alert filtered out by High only.']);
       return;
     }
-    const message = severity === 'high' ? 'High alert preview shown.' : 'Medium alert preview shown.';
+    const message = {
+      high: 'High alert preview shown.', medium: 'Medium alert preview shown.', low: 'Low alert preview shown.',
+    }[severity];
     setPreview([message]);
     if (preferences.sound) {
       try {
@@ -148,6 +153,7 @@ export default function Settings() {
               <div className="workflow-actions">
                 <button className="btn" type="button" onClick={() => previewAlert('high')}>{t('Preview high alert')}</button>
                 <button className="btn" type="button" onClick={() => previewAlert('medium')}>{t('Preview medium alert')}</button>
+                <button className="btn" type="button" onClick={() => previewAlert('low')}>{t('Preview low alert')}</button>
               </div>
               <p className="muted" aria-hidden={preferences.announce || undefined}>{preview.map(t).join(' ')}</p>
               <span className="sr" role="status">{preferences.announce ? preview.map(t).join(' ') : ''}</span>

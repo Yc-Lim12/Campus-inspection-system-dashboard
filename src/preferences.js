@@ -43,7 +43,7 @@ export async function playAlertTone(severity) {
   try {
     await context.resume();
     const high = severity === 'high';
-    const notes = high ? [1040, 1040] : [680, 580];
+    const notes = high ? [1040, 1040] : severity === 'low' ? [490] : [680, 580];
     const spacing = high ? 0.31 : 0.27;
 
     notes.forEach((frequency, index) => {

@@ -1,5 +1,6 @@
 import React from 'react';
 import { useDashboardLocale } from './dashboardLocale.js';
+import DateFilter from './DateFilter.jsx';
 
 const HAZARDS = [
   ['', 'Any hazard'],
@@ -7,6 +8,8 @@ const HAZARDS = [
   ['Water leak or stain', 'Water leak or stain'],
   ['Wall crack', 'Wall crack'],
   ['Floor obstruction', 'Floor obstruction'],
+  ['Minor floor obstruction', 'Minor floor obstruction'],
+  ['Air above limit', 'Air above limit'],
 ];
 const label = (pairs, v) => (pairs.find(([k]) => k === v) || pairs[0])[1];
 
@@ -48,14 +51,10 @@ export default function RecordSearch({ filters, checkpoints, onChange, onClear, 
             {points.map(([k, l]) => <option key={k} value={k}>{t(l)}</option>)}
           </select>
         </label>
-        <label className={'rsx-seg rsx-date' + (from ? '' : ' empty')}>
-          <span className="rsx-k">{t("From")}</span>
-          <input type="date" value={from} max={to || undefined} onChange={event => onChange('from', event.target.value)} />
-        </label>
-        <label className={'rsx-seg rsx-date' + (to ? '' : ' empty')}>
-          <span className="rsx-k">{t("To")}</span>
-          <input type="date" value={to} min={from || undefined} onChange={event => onChange('to', event.target.value)} />
-        </label>
+        <div className="rsx-seg rsx-date"><DateFilter label={t('From')} value={from} invalidRange={Boolean(from && to && from > to)}
+          onChange={value => onChange('from', value)} /></div>
+        <div className="rsx-seg rsx-date"><DateFilter label={t('To')} value={to} invalidRange={Boolean(from && to && from > to)}
+          onChange={value => onChange('to', value)} /></div>
         <label className="rsx-seg">
           <span className="rsx-k">{t("Hazard")}</span>
           <span className={'rsx-v' + (hz ? '' : ' empty')}>{t(label(HAZARDS, hz))}</span>
@@ -70,6 +69,7 @@ export default function RecordSearch({ filters, checkpoints, onChange, onClear, 
           <span>{t("Search")}</span>
         </button>
       </form>
+      {from && to && from > to && <p className="report-error" role="alert">{t('The start date must be on or before the end date.')}</p>}
       <p className="rsx-status">
         {active && (
           <>

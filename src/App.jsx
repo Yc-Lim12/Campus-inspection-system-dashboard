@@ -2,7 +2,7 @@ import React from 'react';
 import { emptyAssistantHistory, readAssistantHistory, saveAssistantHistory } from './assistantHistory.js';
 import { dashboardLanguage, translateDashboard } from './dashboardLocale.js';
 import { DEMO_INCIDENT_TRANSITIONS, DemoCtx, ThemeCtx, SearchCtx, RouteCtx } from './ctx.js';
-import { campusDate, canRequestPhoto, initialConfiguration, initialRobot, reachableCheckpoints, useStoredState } from './dashboardState.js';
+import { campusDate, canRequestPhoto, initialConfiguration, initialRobot, reachableCheckpoints, useStoredState, withConfigurationDefaults } from './dashboardState.js';
 import { applyIncidentUpdates } from './incidents.js';
 import { applyDisplayPreferences, initialPreferences, playAlertTone } from './preferences.js';
 import Palette from './Palette.jsx';
@@ -54,7 +54,8 @@ export default function App() {
   const [manualIncidents, setManualIncidents] = useStoredState('ci-manual-incidents', []);
   const [savedPreferences, setPreferences] = useStoredState('ci-preferences', initialPreferences);
   const preferences = React.useMemo(() => ({ ...initialPreferences, ...savedPreferences }), [savedPreferences]);
-  const [configuration, setConfiguration] = useStoredState('ci-configuration', initialConfiguration);
+  const [savedConfiguration, setConfiguration] = useStoredState('ci-configuration', initialConfiguration);
+  const configuration = React.useMemo(() => withConfigurationDefaults(savedConfiguration), [savedConfiguration]);
   const [robot, setRobot] = useStoredState('ci-robot-simulator', initialRobot);
   const [lastScheduledPatrol, setLastScheduledPatrol] = useStoredState('ci-scheduled-patrol', null);
   const [photoRequests, setPhotoRequests] = useStoredState('ci-photo-requests', []);
@@ -216,6 +217,7 @@ export default function App() {
     const incident = {
       ...fields, id: 'INC-' + now.getTime().toString(36).toUpperCase(),
       day: campusDate(now),
+      detectedAt: now.getTime(),
       time: now.toLocaleTimeString('en-GB', { timeZone: 'Asia/Kuala_Lumpur', hour: '2-digit', minute: '2-digit' }),
       status: 'detected', assignment: 'Unassigned', history: [],
     };
@@ -226,9 +228,13 @@ export default function App() {
 
   function saveConfiguration(changes, message) {
     if (role !== 'admin') return;
-    setConfiguration(current => ({
-      ...current, ...changes, changes: [{ timestamp: Date.now(), message }, ...current.changes],
-    }));
+    setConfiguration(current => {
+      const config = withConfigurationDefaults(current);
+      return {
+        ...current, ...(typeof changes === 'function' ? changes(config) : changes),
+        changes: [{ timestamp: Date.now(), message }, ...config.changes],
+      };
+    });
   }
 
   function commandRobot(command, destination) {

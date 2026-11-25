@@ -1,5 +1,6 @@
 import React from 'react';
 import { CHECKPOINT_ROOMS } from './inspectionRecords.js';
+import { RESPONSE_HOURS } from './incidents.js';
 
 export const initialCheckpoints = Object.entries(CHECKPOINT_ROOMS).map(([id, room], index) => ({
   id,
@@ -12,6 +13,8 @@ export const initialCheckpoints = Object.entries(CHECKPOINT_ROOMS).map(([id, roo
 export const initialConfiguration = {
   checkpoints: initialCheckpoints,
   limits: { temperatureMin: 23, temperatureMax: 26, humidityMin: 40, humidityMax: 70, pm25: 35, gas: 30 },
+  checkpointLimits: {},
+  responseHours: RESPONSE_HOURS,
   patrols: ['09:55', '14:00', '18:30'].map((time, index) => ({
     id: index + 1, time, name: ['Morning', 'Afternoon', 'After classes'][index], days: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri'], active: true,
   })),
@@ -25,6 +28,25 @@ export const initialConfiguration = {
   changes: [],
 };
 
+const samplePeople = [
+  { email: 'admin@example.invalid', label: 'Demo administrator', role: 'Administrator' },
+  { email: 'staff.a@example.invalid', label: 'Demo facility staff A', role: 'Facility staff' },
+  { email: 'staff.b@example.invalid', label: 'Demo facility staff B', role: 'Facility staff' },
+];
+
+export function withConfigurationDefaults(saved) {
+  return {
+    ...initialConfiguration, ...saved,
+    limits: { ...initialConfiguration.limits, ...saved.limits },
+    responseHours: { ...RESPONSE_HOURS, ...saved.responseHours },
+    people: [...samplePeople.filter(sample => !saved.people?.some(person => person.email === sample.email)), ...(saved.people || [])],
+  };
+}
+
+export function limitsForCheckpoint(configuration, checkpoint) {
+  return { ...configuration.limits, ...configuration.checkpointLimits?.[checkpoint] };
+}
+
 export const initialRobot = { mode: 'patrol', destination: 'CP3', position: 'CP2', updated: null };
 export const robotLabels = {
   patrol: 'On patrol', outbound: 'En route', returning: 'Returning to dock',
@@ -37,7 +59,7 @@ export function campusTime(timestamp, language = 'en') {
   if (!campusTimeFormats.has(language)) {
     const locale = language === 'ms' ? 'ms-MY' : language === 'zh' ? 'zh-MY' : 'en-GB';
     campusTimeFormats.set(language, new Intl.DateTimeFormat(locale, {
-      timeZone: 'Asia/Kuala_Lumpur', dateStyle: 'medium', timeStyle: 'medium',
+      timeZone: 'Asia/Kuala_Lumpur', dateStyle: 'medium', timeStyle: 'short', hourCycle: 'h23',
     }));
   }
   return campusTimeFormats.get(language).format(timestamp);

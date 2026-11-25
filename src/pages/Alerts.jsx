@@ -4,11 +4,12 @@ import DashboardPage, { WorkflowDialog } from '../DashboardPage.jsx';
 import RobotControls from '../RobotControls.jsx';
 import { DEMO_INCIDENT_TRANSITIONS, DemoCtx } from '../ctx.js';
 import { campusTime, checkpointLabel } from '../dashboardState.js';
-import { INCIDENT_LABELS } from '../incidents.js';
+import { INCIDENT_LABELS, RESPONSE_HOURS, incidentTimestamp, responseDeadline } from '../incidents.js';
+import { campusDayLabel } from '../campusDates.js';
 import { prefersReducedMotion } from '../preferences.js';
 
 const actions = { acknowledged: 'Acknowledge', reported: 'Mark as reported', on_hold: 'Put on hold', resolved: 'Resolve incident' };
-const severities = ['High', 'Medium', 'Low'];
+const severities = Object.keys(RESPONSE_HOURS);
 
 function localizeActivity(message, t) {
   return message.split(' · ').map(part => {
@@ -55,11 +56,19 @@ function NewAlert({ onClose, onCreate }) {
   );
 }
 
-function AlertDetails({ incident, panel }) {
+function AlertDetails({ incident, panel, onResolved }) {
   const { language, t } = useDashboardLocale();
   const { configuration, updateIncident } = React.useContext(DemoCtx);
   const [dialog, setDialog] = React.useState(null);
+  const [now, setNow] = React.useState(Date.now);
+  const deadline = responseDeadline(incident, configuration.responseHours, t, now);
   const assignments = [...new Set(['Unassigned', 'Facilities Management', ...configuration.people.map(person => person.email)])];
+
+  React.useEffect(() => {
+    if (incident.sample || incident.status === 'resolved') return;
+    const timer = window.setInterval(() => setNow(Date.now()), 30000);
+    return () => window.clearInterval(timer);
+  }, [incident.sample, incident.status]);
 
   function submit(event) {
     event.preventDefault();
@@ -79,20 +88,36 @@ function AlertDetails({ incident, panel }) {
     <section className="card workflow-panel alert-detail" aria-labelledby="active-alert" tabIndex={-1} ref={panel}>
       <header className="workflow-heading">
         <div><p className="muted">{incident.id}</p><h2 id="active-alert">{t(incident.title)}</h2></div>
-        <span className="pill">{t(incident.severity)} · {t(INCIDENT_LABELS[incident.status])}</span>
+        <span className="report-severity" data-severity={incident.severity}>{t(incident.severity)} · {t(INCIDENT_LABELS[incident.status])}</span>
       </header>
+      {incident.photo && (
+        <figure className="alert-evidence">
+          <img src={incident.photo} alt={t('Sample water leak on a corridor floor')} />
+          <figcaption>{t('Sample photo evidence (AI-generated)')}</figcaption>
+        </figure>
+      )}
       <dl className="workflow-facts">
         <div><dt>{t("Checkpoint")}</dt><dd>{incident.checkpoint} · {incident.room}</dd></div>
-        <div><dt>{t("Detected")}</dt><dd>{incident.day} {incident.time}</dd></div>
+        <div><dt>{t("Detected")}</dt><dd>{incident.time ? campusTime(incidentTimestamp(incident.day, incident.time), language) : campusDayLabel(incident.day)}</dd></div>
         <div><dt>{t("Assigned to")}</dt><dd>{t(incident.assignment)}</dd></div>
         {incident.workOrder && <div><dt>{t("Work order")}</dt><dd>{incident.workOrder}</dd></div>}
         {incident.pm25 && <div><dt>PM2.5</dt><dd>{incident.pm25} µg/m³</dd></div>}
-        {incident.confidence && <div><dt>{t("Confidence")}</dt><dd>{Math.round(incident.confidence * 100)}%</dd></div>}
+        {incident.confidence != null && <div><dt>{t("AI confidence")}</dt><dd>{incident.confidence.toFixed(2)}</dd></div>}
+        {deadline && <div><dt>{t('Response deadline')}</dt>
+          <dd><time dateTime={new Date(deadline.dueAt).toISOString()}>{campusTime(deadline.dueAt, language)}</time><br />
+            <strong className={deadline.overdue ? 'sla-overdue' : undefined}>{deadline.label}</strong>
+          </dd>
+        </div>}
       </dl>
       <div className="workflow-actions">
         {DEMO_INCIDENT_TRANSITIONS[incident.status].map(status => (
-          <button className={status === 'on_hold' ? "btn" : "btn primary"} type="button" key={status} onClick={() =>
-            status === 'reported' ? setDialog(status) : updateIncident(incident, { status })}>{t(actions[status])}</button>
+          <button className={status === 'on_hold' ? "btn" : "btn primary"} type="button" key={status} onClick={() => {
+            if (status === 'reported') setDialog(status);
+            else {
+              updateIncident(incident, { status });
+              if (status === 'resolved') onResolved(incident.id);
+            }
+          }}>{t(actions[status])}</button>
         ))}
         <button className="btn" type="button" onClick={() => setDialog('assignment')}>{t("Reassign")}</button>
         <button className="btn" type="button" onClick={() => setDialog('note')}>{t("Add note")}</button>
@@ -143,13 +168,21 @@ export default function Alerts({ section }) {
   const { t } = useDashboardLocale();
   const { incidents } = React.useContext(DemoCtx);
   const [query, setQuery] = React.useState('');
-  const [status, setStatus] = React.useState('all');
+  const directIncident = incidents.find(incident => incident.id === section);
+  const [status, setStatus] = React.useState(() => directIncident?.status === 'resolved' ? 'resolved' : 'open');
   const [creating, setCreating] = React.useState(false);
   const details = React.useRef(null);
   const matches = incidents.filter(incident =>
     (status === 'all' || (status === 'open' ? incident.status !== 'resolved' : incident.status === 'resolved')) &&
     [incident.id, incident.title, t(incident.title), incident.checkpoint, incident.room].join(' ').toLowerCase().includes(query.trim().toLowerCase()));
+  if (status === 'open') matches.sort((a, b) => severities.indexOf(a.severity) - severities.indexOf(b.severity));
   const selected = matches.find(incident => incident.id === section) || matches[0];
+
+  React.useEffect(() => {
+    if (!section) return;
+    const linked = incidents.find(incident => incident.id === section);
+    if (linked) setStatus(current => current === 'all' ? current : linked.status === 'resolved' ? 'resolved' : 'open');
+  }, [section]);
 
   React.useEffect(() => {
     if (section) revealAlertDetails(details.current);
@@ -161,6 +194,11 @@ export default function Alerts({ section }) {
     revealAlertDetails(details.current);
   }
 
+  function showResolvedIncident(id) {
+    setStatus(current => current === 'open' ? 'resolved' : current);
+    location.hash = '#alerts/' + id;
+  }
+
   return (
     <DashboardPage title={t("Alerts")} className="pg-alerts" actions={<button className="btn primary" type="button" onClick={() => setCreating(true)}>{t("Report alert")}</button>}>
       <div className="workflow-split">
@@ -168,7 +206,7 @@ export default function Alerts({ section }) {
           <div className="workflow-form">
             <label>{t("Search alerts")}<input type="search" placeholder={t("ID, room or hazard")} value={query} onChange={event => setQuery(event.target.value)} /></label>
             <label>{t("Status")}<select className="alert-status-select" value={status} onChange={event => setStatus(event.target.value)}>
-              <option value="all">{t("All alerts")}</option><option value="open">{t("Unresolved")}</option><option value="resolved">{t("Resolved")}</option>
+              <option value="open">{t("Open")}</option><option value="resolved">{t("Resolved")}</option><option value="all">{t("All alerts")}</option>
             </select></label>
           </div>
           <div className="workflow-list alert-links">
@@ -177,16 +215,17 @@ export default function Alerts({ section }) {
                 aria-current={selected?.id === incident.id ? 'true' : undefined} href={'#alerts/' + incident.id}
                 onClick={event => handleAlertClick(event, incident.id)}>
                 <strong>{t(incident.title)}</strong><span>{incident.id} · {incident.checkpoint}</span>
-                <span>{t(incident.severity)} · {t(INCIDENT_LABELS[incident.status])}</span>
+                <span className="alert-list-meta"><span className="report-severity" data-severity={incident.severity}>{t(incident.severity)}</span>
+                  {t(INCIDENT_LABELS[incident.status])}</span>
               </a>
             ))}
             {matches.length === 0 && <p role="status">{t("No alerts match.")}</p>}
           </div>
         </section>
-        {selected && <AlertDetails key={selected.id} incident={selected} panel={details} />}
+        {selected && <AlertDetails key={selected.id} incident={selected} panel={details} onResolved={showResolvedIncident} />}
       </div>
       {creating && <NewAlert onClose={() => setCreating(false)}
-        onCreate={() => { setCreating(false); setQuery(''); setStatus('all'); }} />}
+        onCreate={() => { setCreating(false); setQuery(''); setStatus('open'); }} />}
     </DashboardPage>
   );
 }

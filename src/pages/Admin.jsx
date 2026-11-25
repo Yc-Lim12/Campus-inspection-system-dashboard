@@ -2,7 +2,8 @@ import React from 'react';
 import { useDashboardLocale } from '../dashboardLocale.js';
 import DashboardPage, { WorkflowDialog } from '../DashboardPage.jsx';
 import { DemoCtx } from '../ctx.js';
-import { campusTime, robotLabels } from '../dashboardState.js';
+import { campusTime, checkpointLabel, limitsForCheckpoint, robotLabels } from '../dashboardState.js';
+import { RESPONSE_HOURS } from '../incidents.js';
 
 const days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
 const limitFields = [
@@ -134,30 +135,107 @@ function Editor({ type, item, configuration, save, onClose }) {
   );
 }
 
+function AlertLimits({ configuration, save, t }) {
+  const [checkpoint, setCheckpoint] = React.useState('');
+  const [draft, setDraft] = React.useState(null);
+  const [error, setError] = React.useState(false);
+  const limits = draft || limitsForCheckpoint(configuration, checkpoint);
+  const hasOverride = Boolean(configuration.checkpointLimits[checkpoint]);
+
+  function saveLimits(event) {
+    event.preventDefault();
+    const next = Object.fromEntries(limitFields.map(([key]) => [key, Number(limits[key])]));
+    if (next.temperatureMin > next.temperatureMax || next.humidityMin > next.humidityMax) {
+      setError(true);
+      return;
+    }
+    if (!checkpoint) save({ limits: next }, 'Saved reading limits');
+    else save(current => {
+      const overrides = Object.fromEntries(Object.entries(next).filter(([key, value]) => value !== current.limits[key]));
+      const checkpointLimits = { ...current.checkpointLimits };
+      if (Object.keys(overrides).length) checkpointLimits[checkpoint] = overrides;
+      else delete checkpointLimits[checkpoint];
+      return { checkpointLimits };
+    }, { key: 'Saved reading limits for {item}', values: { item: checkpoint } });
+    setDraft(null);
+    setError(false);
+  }
+
+  function resetLimits() {
+    save(current => {
+      const checkpointLimits = { ...current.checkpointLimits };
+      delete checkpointLimits[checkpoint];
+      return { checkpointLimits };
+    }, { key: 'Restored default limits for {item}', values: { item: checkpoint } });
+    setDraft(null);
+    setError(false);
+  }
+
+  return (
+    <section className="card workflow-panel" aria-labelledby="alert-limits">
+      <h2 id="alert-limits">{t('Alert limits')}</h2>
+      <p className="muted">{t('Checkpoints inherit default limits until you save an override.')}</p>
+      <form className="workflow-form admin-config-form" onSubmit={saveLimits}>
+        <label>{t('Checkpoint')}<select value={checkpoint} onChange={event => {
+          setCheckpoint(event.target.value);
+          setDraft(null);
+          setError(false);
+        }}>
+          <option value="">{t('All checkpoints (default)')}</option>
+          {configuration.checkpoints.map(item => <option key={item.id} value={item.id}>{checkpointLabel(configuration.checkpoints, item.id)}</option>)}
+        </select></label>
+        <div className="workflow-fields">
+          {limitFields.map(([key, label, min, max]) => <label key={key}>{t(label)}
+            <input name={key} type="number" required min={min} max={max} step="0.1" value={limits[key]}
+              onChange={event => { setDraft({ ...limits, [key]: event.target.value }); setError(false); }} />
+          </label>)}
+        </div>
+        {error && <p role="alert">{t('Minimum values must be less than or equal to their maximums.')}</p>}
+        <div className="workflow-actions">
+          <button className="btn primary" type="submit">{t('Save limits')}</button>
+          {hasOverride && <button className="btn" type="button" onClick={resetLimits}>{t('Use default limits')}</button>}
+        </div>
+      </form>
+    </section>
+  );
+}
+
+function ResponseDeadlines({ values, save, t }) {
+  const [draft, setDraft] = React.useState(null);
+  const hours = draft || values;
+  function submit(event) {
+    event.preventDefault();
+    save({ responseHours: Object.fromEntries(Object.entries(hours).map(([severity, value]) => [severity, Number(value)])) }, 'Saved response deadlines');
+    setDraft(null);
+  }
+  return (
+    <section className="card workflow-panel" aria-labelledby="response-deadlines">
+      <h2 id="response-deadlines">{t('Response deadlines')}</h2>
+      <p className="muted">{t('Hours from incident detection, by severity.')}</p>
+      <form className="workflow-form admin-config-form" onSubmit={submit}>
+        <div className="workflow-fields">
+          {Object.keys(RESPONSE_HOURS).map(severity => <label key={severity}>{t(severity)}
+            <input name={severity} type="number" required min="1" max="720" value={hours[severity]}
+              onChange={event => setDraft({ ...hours, [severity]: event.target.value })} />
+          </label>)}
+        </div>
+        <button className="btn primary" type="submit">{t('Save deadlines')}</button>
+      </form>
+    </section>
+  );
+}
+
 export default function Admin() {
   const { language, t } = useDashboardLocale();
   const { configuration, saveConfiguration, robot } = React.useContext(DemoCtx);
   const [editor, setEditor] = React.useState(null);
-  const [limits, setLimits] = React.useState(configuration.limits);
   const [feedback, setFeedback] = React.useState('');
-  const [error, setError] = React.useState('');
   const close = () => setEditor(null);
   const open = (type, item) => setEditor({ type, item });
 
   function save(update, message) {
     saveConfiguration(update, message);
     setFeedback(message);
-  }
-
-  function saveLimits(event) {
-    event.preventDefault();
-    const next = Object.fromEntries(limitFields.map(([key]) => [key, Number(limits[key])]));
-    if (next.temperatureMin > next.temperatureMax || next.humidityMin > next.humidityMax) {
-      setError('Minimum values must be less than or equal to their maximums.');
-      return;
-    }
-    setError('');
-    save({ limits: next }, 'Saved reading limits');
   }
 
   return (
@@ -167,7 +245,7 @@ export default function Admin() {
       <div className="workflow-grid">
         <section className="card workflow-panel" aria-labelledby="checkpoints-admin">
           <div className="workflow-heading"><h2 id="checkpoints-admin">{t("Checkpoints")}</h2>
-            <button className="btn primary add-checkpoint" type="button" onClick={() => open('checkpoint')}>{t("Add checkpoint")}</button></div>
+            <button className="btn primary" type="button" onClick={() => open('checkpoint')}>{t("Add checkpoint")}</button></div>
           <ul className="workflow-list">
             {configuration.checkpoints.map(item => <li key={item.id} className="workflow-row">
               <div><strong>{item.id} · {item.room}</strong><br /><span className="muted">{t(item.location)} · {t(item.active ? 'Active' : 'Inactive')} · {t(item.photo ? 'Photos allowed' : 'No photos')}</span></div>
@@ -177,29 +255,17 @@ export default function Admin() {
         </section>
         <section className="card workflow-panel" aria-labelledby="robot-health">
           <h2 id="robot-health">{t("Robot 01 health")}</h2>
-          <p>{configuration.healthCheckedAt ? t('Last check {time}', { time: campusTime(configuration.healthCheckedAt, language) }) : t('No simulator health check run yet.')}</p>
-          <p className="muted">{configuration.healthCheckedAt && t('Simulator responding. Robot mode: {mode}.', { mode: t(robotLabels[robot.mode]) })}</p>
+          <p>{t('Simulator responding. Robot mode: {mode}.', { mode: t(robotLabels[robot.mode]) })}</p>
+          <p className="muted">{configuration.healthCheckedAt ? t('Last check {time}', { time: campusTime(configuration.healthCheckedAt, language) }) : t('Sample status · Battery 78% · Signal good')}</p>
           <button className="btn" type="button" onClick={() => save({ healthCheckedAt: Date.now() }, 'Simulator health check passed')}>{t("Run health check")}</button>
         </section>
-        <section className="card workflow-panel" aria-labelledby="alert-limits">
-          <h2 id="alert-limits">{t("Alert limits")}</h2>
-          <p className="muted">{t("Saved temperature, humidity and PM2.5 limits apply to the air quality report. The gas limit is stored for use with sensor data.")}</p>
-          <form className="workflow-form" onSubmit={saveLimits}>
-            <div className="workflow-fields">
-              {limitFields.map(([key, label, min, max]) => <label key={key}>{t(label)}
-                <input type="number" required min={min} max={max} step="0.1" value={limits[key]}
-                  onChange={event => { setLimits(current => ({ ...current, [key]: event.target.value })); setError(''); }} />
-              </label>)}
-            </div>
-            {error && <p role="alert">{t(error)}</p>}
-            <button className="btn primary" type="submit">{t("Save limits")}</button>
-          </form>
-        </section>
+        <AlertLimits configuration={configuration} save={save} t={t} />
+        <ResponseDeadlines values={configuration.responseHours} save={save} t={t} />
         <section className="card workflow-panel" aria-labelledby="people-admin">
           <div className="workflow-heading"><h2 id="people-admin">{t("People")}</h2>
-            <button className="btn" type="button" onClick={() => open('person')}>{t("Invite")}</button></div>
-          {configuration.people.length ? <ul className="workflow-list">{configuration.people.map(person =>
-            <li key={person.email}>{person.email} · {t(person.role)}</li>)}</ul> : <p className="muted">{t("No local roster entries.")}</p>}
+            <button className="btn primary" type="button" onClick={() => open('person')}>{t("Invite")}</button></div>
+          <ul className="workflow-list">{configuration.people.map(person =>
+            <li key={person.email}>{person.label ? t(person.label) : person.email} · {t(person.role)}</li>)}</ul>
         </section>
         <section className="card workflow-panel" aria-labelledby="patrols-admin">
           <div className="workflow-heading"><h2 id="patrols-admin">{t("Patrol schedule")}</h2>
@@ -213,7 +279,7 @@ export default function Admin() {
         </section>
         <section className="card workflow-panel" aria-labelledby="privacy-admin">
           <div className="workflow-heading"><h2 id="privacy-admin">{t("Camera and access rules")}</h2>
-            <button className="btn" type="button" onClick={() => open('zone')}>{t("Add restricted zone")}</button></div>
+            <button className="btn primary" type="button" onClick={() => open('zone')}>{t("Add restricted zone")}</button></div>
           <ul className="workflow-list">{configuration.zones.map(item => <li key={item.id} className="workflow-row">
             <span>{t(item.name)} · {t(item.rule)}{item.checkpoint && ' · ' + item.checkpoint}</span>
             <button className="btn" type="button" aria-label={t('Edit restricted zone') + ' ' + t(item.name)} onClick={() => open('zone', item)}>{t("Edit")}</button>
