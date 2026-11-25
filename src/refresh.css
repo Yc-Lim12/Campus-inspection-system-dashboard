@@ -559,13 +559,13 @@
 .rsx-seg input:focus-visible { outline: 0 !important; }
 
 
-/* Records and Settings pickers share the active theme accent. */
+/* Dashboard language and filter pickers share the active theme accent. */
 @supports (appearance: base-select) and selector(::picker(select)) {
-  .rsx-seg > select,
-  :is(.rsx-seg > select, .setting-select > select)::picker(select) {
+  :is(.rsx-seg, .login-language) > select,
+  :is(.rsx-seg > select, .setting-select > select, .login-language > select)::picker(select) {
     appearance: base-select;
   }
-  :is(.rsx-seg > select, .setting-select > select)::picker(select) {
+  :is(.rsx-seg > select, .setting-select > select, .login-language > select)::picker(select) {
     box-sizing: border-box;
     min-inline-size: min(max(anchor-size(width), 13rem), calc(100vw - 24px));
     max-inline-size: calc(100vw - 24px);
@@ -579,7 +579,7 @@
     opacity: 1;
     font: 500 14px/1.4 var(--type);
   }
-  :is(.rsx-seg > select, .setting-select > select) option {
+  :is(.rsx-seg > select, .setting-select > select, .login-language > select) option {
     box-sizing: border-box;
     min-block-size: 40px;
     padding: 9px 11px;
@@ -587,26 +587,26 @@
     border-radius: var(--r-sm);
     cursor: pointer;
   }
-  :is(.rsx-seg > select, .setting-select > select) option:checked {
+  :is(.rsx-seg > select, .setting-select > select, .login-language > select) option:checked {
     background: var(--accent-surface);
     color: var(--accent);
     font-weight: 650;
   }
-  :is(.rsx-seg > select, .setting-select > select) option:is(:hover, :focus-visible) {
+  :is(.rsx-seg > select, .setting-select > select, .login-language > select) option:is(:hover, :focus-visible) {
     background: color-mix(in srgb, var(--accent-surface) 90%, var(--accent));
     color: var(--accent);
   }
-  :is(.rsx-seg > select, .setting-select > select) option:focus-visible {
+  :is(.rsx-seg > select, .setting-select > select, .login-language > select) option:focus-visible {
     outline: 2px solid var(--accent-strong);
     outline-offset: -2px;
   }
-  :is(.rsx-seg > select, .setting-select > select) option::checkmark {
+  :is(.rsx-seg > select, .setting-select > select, .login-language > select) option::checkmark {
     order: 1;
     margin-inline-start: auto;
     color: var(--accent);
   }
   @media (prefers-reduced-motion: no-preference) {
-    :is(.rsx-seg > select, .setting-select > select)::picker(select) {
+    :is(.rsx-seg > select, .setting-select > select, .login-language > select)::picker(select) {
       animation: themed-picker-in 140ms var(--ease);
     }
   }
@@ -1074,6 +1074,24 @@ html:not([data-demo-role="admin"]) .side a[href="#admin"] { display: none; }
   font-size: .8125rem;
   font-weight: 650;
 }
+.policy-nav-list {
+  position: relative;
+  isolation: isolate;
+}
+.policy-nav-indicator {
+  display: none;
+  position: absolute;
+  top: 0;
+  left: 0;
+  z-index: 1;
+  box-sizing: border-box;
+  border: 1px solid var(--accent-line);
+  border-radius: var(--r-sm);
+  background: var(--accent-surface);
+  pointer-events: none;
+  transition: transform .32s cubic-bezier(.2, .75, .25, 1), width .32s ease, height .32s ease;
+}
+.policy-nav-indicator[data-positioned] { display: block; }
 .demo-policy-nav ul {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -1083,6 +1101,8 @@ html:not([data-demo-role="admin"]) .side a[href="#admin"] { display: none; }
   list-style: none;
 }
 .demo-policy-nav a {
+  position: relative;
+  z-index: 2;
   display: flex;
   align-items: center;
   box-sizing: border-box;
@@ -1095,14 +1115,12 @@ html:not([data-demo-role="admin"]) .side a[href="#admin"] { display: none; }
   font-size: .875rem;
   line-height: 1.35;
   text-decoration: none;
-  transition: background-color .15s ease, border-color .15s ease, color .15s ease;
+  transition: background-color .15s ease, color .2s ease;
 }
-.demo-policy-nav a:hover {
+.demo-policy-nav a:not([aria-current]):hover {
   background: var(--surface-muted);
 }
 .demo-policy-nav a[aria-current] {
-  border-color: var(--accent-line);
-  background: var(--accent-surface);
   color: var(--accent);
   font-weight: 650;
 }
@@ -1240,8 +1258,15 @@ html:not([data-demo-role="admin"]) .side a[href="#admin"] { display: none; }
     border-radius: 50%;
     background: var(--surface);
   }
-  .demo-policy-nav li:has(a[aria-current])::before {
-    border-color: var(--accent);
+  .policy-nav-indicator::before {
+    content: "";
+    position: absolute;
+    inset-block-start: 50%;
+    inset-inline-start: -19px;
+    width: 9px;
+    height: 9px;
+    transform: translateY(-50%);
+    border-radius: 50%;
     background: var(--accent);
   }
   .demo-policy-nav a { min-height: 44px; }
@@ -1255,7 +1280,10 @@ html:not([data-demo-role="admin"]) .side a[href="#admin"] { display: none; }
   .demo-policy-nav ul { grid-template-columns: 1fr; }
 }
 @media (prefers-reduced-motion: reduce) {
-  .demo-policy-nav a { transition: none; }
+  .demo-policy-nav a, .policy-nav-indicator { transition: none; }
+}
+@media (forced-colors: active) {
+  .demo-policy-nav a[aria-current] { outline: 1px solid Highlight; }
 }
 
 .demo-feature-note { margin:5px 0 9px; font-size:14px; }
@@ -1690,4 +1718,37 @@ ol.workflow-list { padding-inline-start: 24px; }
   .chat-layout-with-history { grid-template-columns: minmax(0, 1fr) minmax(200px, 250px); }
   .pg-assistant .chat-history { order: 0; }
   .chat-history ul { max-block-size: min(62dvh, 700px); }
+}
+
+.login-language > select { min-inline-size: 8rem; padding: 7px 10px; }
+.login-language > select::picker-icon { color: var(--accent); }
+
+:root:root:root .pg-admin .btn.primary.add-checkpoint {
+  background: var(--accent-solid) !important;
+  color: var(--on-accent) !important;
+  border: 0 !important;
+  border-radius: var(--r-pill);
+  box-shadow: none !important;
+  filter: none !important;
+  transition: background-color 150ms ease, transform 150ms ease;
+}
+:root:root:root .pg-admin .btn.primary.add-checkpoint:hover {
+  background: color-mix(in srgb, var(--accent-solid) 78%, white) !important;
+  transform: translateY(-2px);
+}
+:root:root:root .pg-admin .btn.primary.add-checkpoint:active { transform: translateY(0); }
+@media (prefers-reduced-motion: reduce) {
+  :root:root:root .pg-admin .btn.primary.add-checkpoint { transition: none; }
+  :root:root:root .pg-admin .btn.primary.add-checkpoint:hover { transform: none; }
+}
+:root[data-reduce-motion] .pg-admin .btn.primary.add-checkpoint:hover { transform: none !important; }
+
+@supports (appearance: base-select) and selector(::picker(select)) {
+  /* Keep the login language menu below its trigger. */
+  .login-language > select::picker(select) {
+    position-area: block-end span-inline-end;
+    position-try-fallbacks: none;
+    max-block-size: 35vh;
+    overflow-y: auto;
+  }
 }

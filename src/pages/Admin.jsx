@@ -167,7 +167,7 @@ export default function Admin() {
       <div className="workflow-grid">
         <section className="card workflow-panel" aria-labelledby="checkpoints-admin">
           <div className="workflow-heading"><h2 id="checkpoints-admin">{t("Checkpoints")}</h2>
-            <button className="btn primary" type="button" onClick={() => open('checkpoint')}>{t("Add checkpoint")}</button></div>
+            <button className="btn primary add-checkpoint" type="button" onClick={() => open('checkpoint')}>{t("Add checkpoint")}</button></div>
           <ul className="workflow-list">
             {configuration.checkpoints.map(item => <li key={item.id} className="workflow-row">
               <div><strong>{item.id} · {item.room}</strong><br /><span className="muted">{t(item.location)} · {t(item.active ? 'Active' : 'Inactive')} · {t(item.photo ? 'Photos allowed' : 'No photos')}</span></div>

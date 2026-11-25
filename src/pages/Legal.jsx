@@ -41,48 +41,87 @@ function openPolicy(id, shouldAnimate) {
   const animate = shouldAnimate && !prefersReducedMotion();
   heading.focus({ preventScroll: true });
   heading.scrollIntoView({ block: 'start', behavior: animate ? 'smooth' : 'instant' });
-  if (!animate) return;
-
-  let slide;
-  const observer = new IntersectionObserver(([entry]) => {
-    if (!entry.isIntersecting) return;
-    observer.disconnect();
-    window.clearTimeout(timeout);
-    slide = heading.closest('section').animate([
-      { transform: 'translateX(-12px)' },
-      { transform: 'translateX(0)' },
-    ], { duration: 280, easing: 'ease-out' });
-  }, { rootMargin: '0px 0px -25% 0px' });
-  const timeout = window.setTimeout(() => observer.disconnect(), 1000);
-  observer.observe(heading);
-
-  return () => {
-    observer.disconnect();
-    window.clearTimeout(timeout);
-    slide?.cancel();
-  };
 }
 
 export default function Legal({ section }) {
   const { language, t } = useDashboardLocale();
   const { role } = React.useContext(DemoCtx);
   const clickedPolicy = React.useRef(null);
-  const cancelMotion = React.useRef(null);
-  const current = policySections.some(({ id }) => id === section) ? section : policySections[0].id;
+  const routeSection = policySections.some(({ id }) => id === section) ? section : undefined;
+  const [activeSection, setActiveSection] = React.useState(routeSection || policySections[0].id);
+  const policyContent = React.useRef(null);
+  const policyNavList = React.useRef(null);
+  const policyNavIndicator = React.useRef(null);
+
+  React.useLayoutEffect(() => {
+    const list = policyNavList.current;
+    const indicator = policyNavIndicator.current;
+    const currentLink = list.querySelector('[aria-current="location"]');
+
+    function moveIndicator() {
+      let left = 0;
+      let top = 0;
+      for (let element = currentLink; element !== list; element = element.offsetParent) {
+        left += element.offsetLeft;
+        top += element.offsetTop;
+      }
+      indicator.style.transform = `translate(${left}px, ${top}px)`;
+      indicator.style.width = `${currentLink.offsetWidth}px`;
+      indicator.style.height = `${currentLink.offsetHeight}px`;
+      indicator.dataset.positioned = '';
+    }
+
+    moveIndicator();
+    const observer = new ResizeObserver(moveIndicator);
+    observer.observe(list);
+    observer.observe(currentLink);
+    return () => observer.disconnect();
+  }, [activeSection, language]);
+
+  React.useEffect(() => {
+    const content = policyContent.current;
+    const headings = Array.from(content.querySelectorAll(".demo-policy-section > h2"));
+    const scroller = document.scrollingElement;
+    let frame = 0;
+
+    function updateActiveSection() {
+      frame = 0;
+      const readingLine = window.innerHeight * 0.2;
+      const atEnd = scroller.scrollTop > 0 && scroller.scrollHeight - scroller.scrollTop - scroller.clientHeight <= 2;
+      const heading = atEnd ? headings[headings.length - 1] :
+        headings.findLast(item => item.getBoundingClientRect().top <= readingLine) || headings[0];
+      if (heading) setActiveSection(heading.id.slice("legal-".length));
+    }
+
+    function scheduleUpdate() {
+      if (!frame) frame = window.requestAnimationFrame(updateActiveSection);
+    }
+
+    window.addEventListener("scroll", scheduleUpdate, { passive: true });
+    window.addEventListener("resize", scheduleUpdate);
+    const observer = new ResizeObserver(scheduleUpdate);
+    observer.observe(content);
+    scheduleUpdate();
+
+    return () => {
+      window.removeEventListener("scroll", scheduleUpdate);
+      window.removeEventListener("resize", scheduleUpdate);
+      observer.disconnect();
+      window.cancelAnimationFrame(frame);
+    };
+  }, []);
 
   React.useEffect(() => {
     const animate = clickedPolicy.current === section;
     clickedPolicy.current = null;
-    if (section && section === current) cancelMotion.current = openPolicy(section, animate);
-    return () => cancelMotion.current?.();
-  }, [current, section]);
+    if (routeSection) openPolicy(routeSection, animate);
+  }, [routeSection, section]);
 
   function handlePolicyClick(event, id) {
     if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
     if (section === id) {
       event.preventDefault();
-      cancelMotion.current?.();
-      cancelMotion.current = openPolicy(id, true);
+      openPolicy(id, true);
     } else {
       clickedPolicy.current = id;
     }
@@ -105,17 +144,20 @@ export default function Legal({ section }) {
             <div className="policy-layout">
               <nav aria-labelledby="policy-nav-title" className="demo-policy-nav">
                 <h2 id="policy-nav-title">{t("On this page")}</h2>
-                <ul>
-                  {policySections.map(({ id, title, titleMs }) => (
-                    <li key={id}>
-                      <a href={"#legal/" + id} aria-current={current === id ? "location" : undefined} onClick={(event) => handlePolicyClick(event, id)}>
-                        {language === "ms" ? titleMs : t(title)}
-                      </a>
-                    </li>
-                  ))}
-                </ul>
+                <div className="policy-nav-list" ref={policyNavList}>
+                  <span className="policy-nav-indicator" ref={policyNavIndicator} aria-hidden="true" />
+                  <ul>
+                    {policySections.map(({ id, title, titleMs }) => (
+                      <li key={id}>
+                        <a href={"#legal/" + id} aria-current={activeSection === id ? "location" : undefined} onClick={(event) => handlePolicyClick(event, id)}>
+                          {language === "ms" ? titleMs : t(title)}
+                        </a>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
               </nav>
-              <div className="policy-sections">
+              <div className="policy-sections" ref={policyContent}>
                 {policySections.map(({ id, title, titleMs, en, ms }) => (
                   <section key={id} aria-labelledby={"legal-" + id} className="demo-policy-section">
                     <h2 id={"legal-" + id} tabIndex={-1}>{language === "ms" ? titleMs : t(title)}</h2>
