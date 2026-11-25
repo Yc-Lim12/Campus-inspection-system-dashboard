@@ -76,7 +76,7 @@ function AlertDetails({ incident, panel }) {
   }
 
   return (
-    <section className="card workflow-panel" aria-labelledby="active-alert" tabIndex={-1} ref={panel}>
+    <section className="card workflow-panel alert-detail" aria-labelledby="active-alert" tabIndex={-1} ref={panel}>
       <header className="workflow-heading">
         <div><p className="muted">{incident.id}</p><h2 id="active-alert">{t(incident.title)}</h2></div>
         <span className="pill">{t(incident.severity)} · {t(INCIDENT_LABELS[incident.status])}</span>
@@ -133,6 +133,12 @@ function AlertDetails({ incident, panel }) {
   );
 }
 
+function revealAlertDetails(panel) {
+  if (!panel) return;
+  panel.focus({ preventScroll: true });
+  panel.scrollIntoView({ block: 'start', inline: 'nearest', behavior: prefersReducedMotion() ? 'instant' : 'smooth' });
+}
+
 export default function Alerts({ section }) {
   const { t } = useDashboardLocale();
   const { incidents } = React.useContext(DemoCtx);
@@ -146,11 +152,14 @@ export default function Alerts({ section }) {
   const selected = matches.find(incident => incident.id === section) || matches[0];
 
   React.useEffect(() => {
-    const panel = details.current;
-    if (!section || !panel || !window.matchMedia('(max-width: 760px)').matches) return;
-    panel.focus({ preventScroll: true });
-    panel.scrollIntoView({ block: 'start', behavior: prefersReducedMotion() ? 'instant' : 'smooth' });
+    if (section) revealAlertDetails(details.current);
   }, [section]);
+
+  function handleAlertClick(event, id) {
+    if (id !== section || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
+    event.preventDefault();
+    revealAlertDetails(details.current);
+  }
 
   return (
     <DashboardPage title={t("Alerts")} className="pg-alerts" actions={<button className="btn primary" type="button" onClick={() => setCreating(true)}>{t("Report alert")}</button>}>
@@ -158,14 +167,15 @@ export default function Alerts({ section }) {
         <section className="card workflow-panel" aria-label={t("Incident list")}>
           <div className="workflow-form">
             <label>{t("Search alerts")}<input type="search" placeholder={t("ID, room or hazard")} value={query} onChange={event => setQuery(event.target.value)} /></label>
-            <label>{t("Status")}<select value={status} onChange={event => setStatus(event.target.value)}>
+            <label>{t("Status")}<select className="alert-status-select" value={status} onChange={event => setStatus(event.target.value)}>
               <option value="all">{t("All alerts")}</option><option value="open">{t("Unresolved")}</option><option value="resolved">{t("Resolved")}</option>
             </select></label>
           </div>
           <div className="workflow-list alert-links">
             {matches.map(incident => (
               <a key={incident.id} className={'item' + (selected?.id === incident.id ? ' on' : '')}
-                aria-current={selected?.id === incident.id ? 'true' : undefined} href={'#alerts/' + incident.id}>
+                aria-current={selected?.id === incident.id ? 'true' : undefined} href={'#alerts/' + incident.id}
+                onClick={event => handleAlertClick(event, incident.id)}>
                 <strong>{t(incident.title)}</strong><span>{incident.id} · {incident.checkpoint}</span>
                 <span>{t(incident.severity)} · {t(INCIDENT_LABELS[incident.status])}</span>
               </a>

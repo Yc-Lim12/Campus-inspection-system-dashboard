@@ -861,25 +861,35 @@
 .pg-guidebook details summary:focus-visible { outline: 2px solid var(--accent-strong); outline-offset: 3px; }
 
 @media (prefers-reduced-motion: no-preference) {
-  .pg-login .login-shell, .pg main#main { animation: dashboard-enter 240ms ease-out; }
+  :root:not([data-reduce-motion]) :is(.pg-login .login-shell, .pg main#main, .startup-content, .workflow-dialog[open]) {
+    animation: dashboard-enter 170ms var(--ease);
+  }
+  :root:not([data-reduce-motion]) :where(.pg, .workflow-dialog) :where(button.btn, button.startup-skip):enabled {
+    transition: background-color 140ms var(--ease), border-color 140ms var(--ease), filter 140ms var(--ease), translate 110ms var(--ease);
+  }
+  :root:not([data-reduce-motion]) :where(.pg, .workflow-dialog) :where(button.btn, button.startup-skip):enabled:active {
+    translate: 0 1px;
+  }
   .pg-alerts .alert-detail-content { animation: alert-enter 210ms cubic-bezier(.22, .72, .32, 1); }
   .pg-alerts .alert-list .item { transition: background-color 160ms ease-out, border-color 160ms ease-out; }
-  .pg-guidebook details summary::after { transition: transform 200ms ease-out; }
+  :root:not([data-reduce-motion]) :is(.pg-guidebook .guide-topic, .pg-legal .policy-translation) summary::after {
+    transition: transform 150ms var(--ease);
+  }
 
   @supports (interpolate-size: allow-keywords) and selector(::details-content) {
-    .pg-guidebook details { interpolate-size: allow-keywords; }
-    .pg-guidebook details::details-content {
+    :root:not([data-reduce-motion]) .pg-guidebook .guide-topic { interpolate-size: allow-keywords; }
+    :root:not([data-reduce-motion]) .pg-guidebook .guide-topic::details-content {
       block-size: 0;
       overflow: clip;
       opacity: 0;
-      transition: block-size 220ms ease-out, opacity 160ms ease-out, content-visibility 220ms allow-discrete;
+      transition: block-size 180ms var(--ease), opacity 120ms ease-out, content-visibility 180ms allow-discrete;
     }
-    .pg-guidebook details[open]::details-content { block-size: auto; opacity: 1; }
+    :root:not([data-reduce-motion]) .pg-guidebook .guide-topic[open]::details-content { block-size: auto; opacity: 1; }
   }
 }
 
 @keyframes dashboard-enter {
-  from { opacity: .82; transform: translateY(5px); }
+  from { opacity: .9; transform: translateY(2px); }
 }
 @keyframes alert-enter {
   from { opacity: .5; transform: translateX(6px); }
@@ -953,7 +963,6 @@
 .startup-skip:hover { color: var(--accent-strong); }
 
 @media (prefers-reduced-motion: no-preference) {
-  .startup-content { animation: dashboard-enter 200ms ease-out; }
   .startup-progress span { transition: width 280ms ease-out; }
   .startup-step.active .startup-step-icon { animation: startup-spin 760ms linear infinite; }
 }
